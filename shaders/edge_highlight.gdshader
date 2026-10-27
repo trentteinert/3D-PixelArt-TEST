@@ -10,9 +10,12 @@ uniform sampler2D normal_tex : hint_normal_roughness_texture, filter_nearest, re
 
 uniform float depth_threshold : hint_range(0.0, 0.2) = 0.03;
 uniform float normal_threshold : hint_range(0.0, 2.0) = 0.4;
-uniform float convex_highlight : hint_range(1.0, 2.0) = 1.4;
+// How far convex edges are blended toward white (works on dark surfaces too).
+uniform float convex_highlight : hint_range(0.0, 1.0) = 0.35;
 uniform float concave_shadow : hint_range(0.0, 1.0) = 0.7;
 uniform float silhouette_shade : hint_range(0.0, 2.0) = 0.6;
+// Tick to see detected edges only: white = convex, black = concave, red = silhouette.
+uniform bool debug_edges = false;
 
 void vertex() {
 	POSITION = vec4(VERTEX.xy, 1.0, 1.0);
@@ -51,12 +54,15 @@ void fragment() {
 	float facing = max(abs(dot(n0, normalize(p0))), 0.15);
 	float thresh = depth_threshold * d0 / facing;
 
+	if (debug_edges) {
+		col = vec3(0.5);
+	}
 	if (max_depth_step > thresh) {
-		col *= silhouette_shade;
+		col = debug_edges ? vec3(1.0, 0.0, 0.0) : col * silhouette_shade;
 	} else if (normal_sum < -normal_threshold) {
-		col *= convex_highlight;
+		col = debug_edges ? vec3(1.0) : mix(col, vec3(1.0), convex_highlight);
 	} else if (normal_sum > normal_threshold) {
-		col *= concave_shadow;
+		col = debug_edges ? vec3(0.0) : col * concave_shadow;
 	}
 	ALBEDO = col;
 }
