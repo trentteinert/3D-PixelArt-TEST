@@ -1,12 +1,267 @@
 [gd_scene format=3 uid="uid://bnxlh0i2xx6u3"]
 
-[ext_resource type="Script" uid="uid://b4hr2jwjwx8hp" path="res://scripts/test_area.gd" id="1"]
-[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="player"]
+[ext_resource type="Shader" path="res://shaders/grid.gdshader" id="grid"]
 
-[node name="TestArea" type="Node3D" unique_id=465513135]
-script = ExtResource("1")
+[sub_resource type="ProceduralSkyMaterial" id="skymat"]
+sky_top_color = Color(0.2902, 0.4824, 0.8157, 1)
+sky_horizon_color = Color(0.7373, 0.8314, 0.9333, 1)
+ground_horizon_color = Color(0.7373, 0.8314, 0.9333, 1)
 
-[node name="SubViewportContainer" type="SubViewportContainer" parent="." unique_id=1813916895]
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("skymat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+tonemap_mode = 3
+
+[sub_resource type="BoxMesh" id="m1"]
+size = Vector3(80, 1, 80)
+
+[sub_resource type="BoxShape3D" id="s1"]
+size = Vector3(80, 1, 80)
+
+[sub_resource type="ShaderMaterial" id="g1"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.4196, 0.4784, 0.5412, 1)
+shader_parameter/line_color = Color(0.3147, 0.3588, 0.4059, 1)
+
+[sub_resource type="BoxMesh" id="m2"]
+size = Vector3(3, 0.25, 0.6)
+
+[sub_resource type="BoxShape3D" id="s2"]
+size = Vector3(3, 0.25, 0.6)
+
+[sub_resource type="ShaderMaterial" id="g2"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.6039, 0.5608, 0.4784, 1)
+shader_parameter/line_color = Color(0.4529, 0.4206, 0.3588, 1)
+
+[sub_resource type="BoxMesh" id="m3"]
+size = Vector3(3, 0.5, 0.6)
+
+[sub_resource type="BoxShape3D" id="s3"]
+size = Vector3(3, 0.5, 0.6)
+
+[sub_resource type="ShaderMaterial" id="g3"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.6039, 0.5608, 0.4784, 1)
+shader_parameter/line_color = Color(0.4529, 0.4206, 0.3588, 1)
+
+[sub_resource type="BoxMesh" id="m4"]
+size = Vector3(3, 0.75, 0.6)
+
+[sub_resource type="BoxShape3D" id="s4"]
+size = Vector3(3, 0.75, 0.6)
+
+[sub_resource type="ShaderMaterial" id="g4"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.6039, 0.5608, 0.4784, 1)
+shader_parameter/line_color = Color(0.4529, 0.4206, 0.3588, 1)
+
+[sub_resource type="BoxMesh" id="m5"]
+size = Vector3(3, 1.0, 0.6)
+
+[sub_resource type="BoxShape3D" id="s5"]
+size = Vector3(3, 1.0, 0.6)
+
+[sub_resource type="ShaderMaterial" id="g5"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.6039, 0.5608, 0.4784, 1)
+shader_parameter/line_color = Color(0.4529, 0.4206, 0.3588, 1)
+
+[sub_resource type="BoxMesh" id="m6"]
+size = Vector3(3, 1.25, 0.6)
+
+[sub_resource type="BoxShape3D" id="s6"]
+size = Vector3(3, 1.25, 0.6)
+
+[sub_resource type="ShaderMaterial" id="g6"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.6039, 0.5608, 0.4784, 1)
+shader_parameter/line_color = Color(0.4529, 0.4206, 0.3588, 1)
+
+[sub_resource type="BoxMesh" id="m7"]
+size = Vector3(3, 1.5, 0.6)
+
+[sub_resource type="BoxShape3D" id="s7"]
+size = Vector3(3, 1.5, 0.6)
+
+[sub_resource type="ShaderMaterial" id="g7"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.6039, 0.5608, 0.4784, 1)
+shader_parameter/line_color = Color(0.4529, 0.4206, 0.3588, 1)
+
+[sub_resource type="BoxMesh" id="m8"]
+size = Vector3(3, 1.75, 0.6)
+
+[sub_resource type="BoxShape3D" id="s8"]
+size = Vector3(3, 1.75, 0.6)
+
+[sub_resource type="ShaderMaterial" id="g8"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.6039, 0.5608, 0.4784, 1)
+shader_parameter/line_color = Color(0.4529, 0.4206, 0.3588, 1)
+
+[sub_resource type="BoxMesh" id="m9"]
+size = Vector3(3, 2.0, 0.6)
+
+[sub_resource type="BoxShape3D" id="s9"]
+size = Vector3(3, 2.0, 0.6)
+
+[sub_resource type="ShaderMaterial" id="g9"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.6039, 0.5608, 0.4784, 1)
+shader_parameter/line_color = Color(0.4529, 0.4206, 0.3588, 1)
+
+[sub_resource type="BoxMesh" id="m10"]
+size = Vector3(4, 0.4, 8)
+
+[sub_resource type="BoxShape3D" id="s10"]
+size = Vector3(4, 0.4, 8)
+
+[sub_resource type="ShaderMaterial" id="g10"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.4784, 0.6039, 0.4941, 1)
+shader_parameter/line_color = Color(0.3588, 0.4529, 0.3706, 1)
+
+[sub_resource type="BoxMesh" id="m11"]
+size = Vector3(4, 0.4, 8)
+
+[sub_resource type="BoxShape3D" id="s11"]
+size = Vector3(4, 0.4, 8)
+
+[sub_resource type="ShaderMaterial" id="g11"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.6039, 0.4784, 0.4941, 1)
+shader_parameter/line_color = Color(0.4529, 0.3588, 0.3706, 1)
+
+[sub_resource type="BoxMesh" id="m12"]
+size = Vector3(3, 1, 3)
+
+[sub_resource type="BoxShape3D" id="s12"]
+size = Vector3(3, 1, 3)
+
+[sub_resource type="ShaderMaterial" id="g12"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.4784, 0.5255, 0.6902, 1)
+shader_parameter/line_color = Color(0.3588, 0.3941, 0.5176, 1)
+
+[sub_resource type="BoxMesh" id="m13"]
+size = Vector3(3, 2, 3)
+
+[sub_resource type="BoxShape3D" id="s13"]
+size = Vector3(3, 2, 3)
+
+[sub_resource type="ShaderMaterial" id="g13"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.4784, 0.5255, 0.6902, 1)
+shader_parameter/line_color = Color(0.3588, 0.3941, 0.5176, 1)
+
+[sub_resource type="BoxMesh" id="m14"]
+size = Vector3(3, 3, 3)
+
+[sub_resource type="BoxShape3D" id="s14"]
+size = Vector3(3, 3, 3)
+
+[sub_resource type="ShaderMaterial" id="g14"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.4784, 0.5255, 0.6902, 1)
+shader_parameter/line_color = Color(0.3588, 0.3941, 0.5176, 1)
+
+[sub_resource type="BoxMesh" id="m15"]
+size = Vector3(1, 3, 1)
+
+[sub_resource type="BoxShape3D" id="s15"]
+size = Vector3(1, 3, 1)
+
+[sub_resource type="ShaderMaterial" id="g15"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.6902, 0.5412, 0.4157, 1)
+shader_parameter/line_color = Color(0.5176, 0.4059, 0.3118, 1)
+
+[sub_resource type="BoxMesh" id="m16"]
+size = Vector3(1, 3, 1)
+
+[sub_resource type="BoxShape3D" id="s16"]
+size = Vector3(1, 3, 1)
+
+[sub_resource type="ShaderMaterial" id="g16"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.6902, 0.5412, 0.4157, 1)
+shader_parameter/line_color = Color(0.5176, 0.4059, 0.3118, 1)
+
+[sub_resource type="BoxMesh" id="m17"]
+size = Vector3(1, 3, 1)
+
+[sub_resource type="BoxShape3D" id="s17"]
+size = Vector3(1, 3, 1)
+
+[sub_resource type="ShaderMaterial" id="g17"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.6902, 0.5412, 0.4157, 1)
+shader_parameter/line_color = Color(0.5176, 0.4059, 0.3118, 1)
+
+[sub_resource type="BoxMesh" id="m18"]
+size = Vector3(10, 3, 0.5)
+
+[sub_resource type="BoxShape3D" id="s18"]
+size = Vector3(10, 3, 0.5)
+
+[sub_resource type="ShaderMaterial" id="g18"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.6902, 0.5412, 0.4157, 1)
+shader_parameter/line_color = Color(0.5176, 0.4059, 0.3118, 1)
+
+[sub_resource type="BoxMesh" id="m19"]
+size = Vector3(80, 2, 0.5)
+
+[sub_resource type="BoxShape3D" id="s19"]
+size = Vector3(80, 2, 0.5)
+
+[sub_resource type="ShaderMaterial" id="g19"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.3333, 0.3686, 0.4118, 1)
+shader_parameter/line_color = Color(0.2500, 0.2765, 0.3088, 1)
+
+[sub_resource type="BoxMesh" id="m20"]
+size = Vector3(80, 2, 0.5)
+
+[sub_resource type="BoxShape3D" id="s20"]
+size = Vector3(80, 2, 0.5)
+
+[sub_resource type="ShaderMaterial" id="g20"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.3333, 0.3686, 0.4118, 1)
+shader_parameter/line_color = Color(0.2500, 0.2765, 0.3088, 1)
+
+[sub_resource type="BoxMesh" id="m21"]
+size = Vector3(0.5, 2, 80)
+
+[sub_resource type="BoxShape3D" id="s21"]
+size = Vector3(0.5, 2, 80)
+
+[sub_resource type="ShaderMaterial" id="g21"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.3333, 0.3686, 0.4118, 1)
+shader_parameter/line_color = Color(0.2500, 0.2765, 0.3088, 1)
+
+[sub_resource type="BoxMesh" id="m22"]
+size = Vector3(0.5, 2, 80)
+
+[sub_resource type="BoxShape3D" id="s22"]
+size = Vector3(0.5, 2, 80)
+
+[sub_resource type="ShaderMaterial" id="g22"]
+shader = ExtResource("grid")
+shader_parameter/base_color = Color(0.3333, 0.3686, 0.4118, 1)
+shader_parameter/line_color = Color(0.2500, 0.2765, 0.3088, 1)
+
+[node name="TestArea" type="Node3D"]
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="."]
 texture_filter = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -16,8 +271,249 @@ grow_vertical = 2
 stretch = true
 stretch_shrink = 4
 
-[node name="SubViewport" type="SubViewport" parent="SubViewportContainer" unique_id=1105722141]
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer"]
 size = Vector2i(320, 180)
 
-[node name="Player" parent="SubViewportContainer/SubViewport" unique_id=1819165308 instance=ExtResource("2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+[node name="Sun" type="DirectionalLight3D" parent="SubViewportContainer/SubViewport"]
+transform = Transform3D(0.81915, 0.00000, 0.57358, 0.43939, 0.64279, -0.62751, -0.36869, 0.76604, 0.52654, 0, 5, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="SubViewportContainer/SubViewport"]
+environment = SubResource("env")
+
+[node name="Player" parent="SubViewportContainer/SubViewport" instance=ExtResource("player")]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, 0, 1, 0)
+
+[node name="Level" type="Node3D" parent="SubViewportContainer/SubViewport"]
+
+[node name="Floor" type="Node3D" parent="SubViewportContainer/SubViewport/Level"]
+
+[node name="Ground" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/Floor"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, 0, -0.5, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/Floor/Ground"]
+mesh = SubResource("m1")
+surface_material_override/0 = SubResource("g1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/Floor/Ground"]
+shape = SubResource("s1")
+
+[node name="Stairs" type="Node3D" parent="SubViewportContainer/SubViewport/Level"]
+
+[node name="Step1" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, -8, 0.125, -6.0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step1"]
+mesh = SubResource("m2")
+surface_material_override/0 = SubResource("g2")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step1"]
+shape = SubResource("s2")
+
+[node name="Step2" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, -8, 0.375, -6.6)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step2"]
+mesh = SubResource("m3")
+surface_material_override/0 = SubResource("g3")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step2"]
+shape = SubResource("s3")
+
+[node name="Step3" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, -8, 0.625, -7.2)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step3"]
+mesh = SubResource("m4")
+surface_material_override/0 = SubResource("g4")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step3"]
+shape = SubResource("s4")
+
+[node name="Step4" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, -8, 0.875, -7.8)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step4"]
+mesh = SubResource("m5")
+surface_material_override/0 = SubResource("g5")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step4"]
+shape = SubResource("s5")
+
+[node name="Step5" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, -8, 1.125, -8.4)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step5"]
+mesh = SubResource("m6")
+surface_material_override/0 = SubResource("g6")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step5"]
+shape = SubResource("s6")
+
+[node name="Step6" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, -8, 1.375, -9.0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step6"]
+mesh = SubResource("m7")
+surface_material_override/0 = SubResource("g7")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step6"]
+shape = SubResource("s7")
+
+[node name="Step7" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, -8, 1.625, -9.6)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step7"]
+mesh = SubResource("m8")
+surface_material_override/0 = SubResource("g8")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step7"]
+shape = SubResource("s8")
+
+[node name="Step8" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, -8, 1.875, -10.2)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step8"]
+mesh = SubResource("m9")
+surface_material_override/0 = SubResource("g9")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/Stairs/Step8"]
+shape = SubResource("s9")
+
+[node name="Ramps" type="Node3D" parent="SubViewportContainer/SubViewport/Level"]
+
+[node name="GentleRamp" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/Ramps"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, -0.258819, 0, 0.258819, 0.965926, 6, 0.5, -6)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/Ramps/GentleRamp"]
+mesh = SubResource("m10")
+surface_material_override/0 = SubResource("g10")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/Ramps/GentleRamp"]
+shape = SubResource("s10")
+
+[node name="SteepRamp" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/Ramps"]
+transform = Transform3D(1, 0, 0, 0, 0.819152, -0.573576, 0, 0.573576, 0.819152, 12, 1.2, -6)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/Ramps/SteepRamp"]
+mesh = SubResource("m11")
+surface_material_override/0 = SubResource("g11")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/Ramps/SteepRamp"]
+shape = SubResource("s11")
+
+[node name="JumpPlatforms" type="Node3D" parent="SubViewportContainer/SubViewport/Level"]
+
+[node name="Platform1" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/JumpPlatforms"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, 0, 0.5, -12)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/JumpPlatforms/Platform1"]
+mesh = SubResource("m12")
+surface_material_override/0 = SubResource("g12")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/JumpPlatforms/Platform1"]
+shape = SubResource("s12")
+
+[node name="Platform2" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/JumpPlatforms"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, 0, 1.0, -17)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/JumpPlatforms/Platform2"]
+mesh = SubResource("m13")
+surface_material_override/0 = SubResource("g13")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/JumpPlatforms/Platform2"]
+shape = SubResource("s13")
+
+[node name="Platform3" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/JumpPlatforms"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, 0, 1.5, -23)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/JumpPlatforms/Platform3"]
+mesh = SubResource("m14")
+surface_material_override/0 = SubResource("g14")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/JumpPlatforms/Platform3"]
+shape = SubResource("s14")
+
+[node name="Obstacles" type="Node3D" parent="SubViewportContainer/SubViewport/Level"]
+
+[node name="Pillar1" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/Obstacles"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, -4, 1.5, 6)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/Obstacles/Pillar1"]
+mesh = SubResource("m15")
+surface_material_override/0 = SubResource("g15")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/Obstacles/Pillar1"]
+shape = SubResource("s15")
+
+[node name="Pillar2" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/Obstacles"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, 0, 1.5, 8)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/Obstacles/Pillar2"]
+mesh = SubResource("m16")
+surface_material_override/0 = SubResource("g16")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/Obstacles/Pillar2"]
+shape = SubResource("s16")
+
+[node name="Pillar3" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/Obstacles"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, 4, 1.5, 6)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/Obstacles/Pillar3"]
+mesh = SubResource("m17")
+surface_material_override/0 = SubResource("g17")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/Obstacles/Pillar3"]
+shape = SubResource("s17")
+
+[node name="Wall" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/Obstacles"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, 10, 1.5, 8)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/Obstacles/Wall"]
+mesh = SubResource("m18")
+surface_material_override/0 = SubResource("g18")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/Obstacles/Wall"]
+shape = SubResource("s18")
+
+[node name="ArenaWalls" type="Node3D" parent="SubViewportContainer/SubViewport/Level"]
+
+[node name="North" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/ArenaWalls"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, 0, 1, -40.25)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/ArenaWalls/North"]
+mesh = SubResource("m19")
+surface_material_override/0 = SubResource("g19")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/ArenaWalls/North"]
+shape = SubResource("s19")
+
+[node name="South" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/ArenaWalls"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, 0, 1, 40.25)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/ArenaWalls/South"]
+mesh = SubResource("m20")
+surface_material_override/0 = SubResource("g20")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/ArenaWalls/South"]
+shape = SubResource("s20")
+
+[node name="East" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/ArenaWalls"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, 40.25, 1, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/ArenaWalls/East"]
+mesh = SubResource("m21")
+surface_material_override/0 = SubResource("g21")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/ArenaWalls/East"]
+shape = SubResource("s21")
+
+[node name="West" type="StaticBody3D" parent="SubViewportContainer/SubViewport/Level/ArenaWalls"]
+transform = Transform3D(1, 0, 0, 0, 1.000000, 0.000000, 0, -0.000000, 1.000000, -40.25, 1, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Level/ArenaWalls/West"]
+mesh = SubResource("m22")
+surface_material_override/0 = SubResource("g22")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/ArenaWalls/West"]
+shape = SubResource("s22")

@@ -11,8 +11,8 @@ Godot 4.3+ sandbox for third-person movement and shader experiments. Open the fo
 | T / Y button | Cycle character shader: toon+outline, toon, plain |
 | Esc | Release / recapture mouse |
 
-- `scenes/test_area.tscn` – main scene; layout is built in `scripts/test_area.gd`
-- `scenes/player.tscn` – CharacterBody3D, spring-arm camera
+- `scenes/test_area.tscn` – main scene; every object is a node (edit under `Level/`), inside a SubViewport for pixelation
+- `scenes/player.tscn` – CharacterBody3D, character mesh nodes, spring-arm camera
 - `scripts/player.gd` – movement tuning via exported vars in the Inspector
-- `scripts/character_model.gd` – procedural low-poly character
+- `scripts/character_model.gd` – procedural animation + shader style switching
 - `shaders/` – `toon`, `outline` (inverted hull), `grid` (world-space floor grid)
