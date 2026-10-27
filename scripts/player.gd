@@ -25,6 +25,7 @@ extends CharacterBody3D
 @onready var model: CharacterModel = $Model
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var spring_arm: SpringArm3D = $CameraPivot/SpringArm3D
+@onready var edge_highlight: MeshInstance3D = $CameraPivot/SpringArm3D/Camera3D/EdgeHighlight
 
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _coyote := 0.0
@@ -46,6 +47,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
 	elif event.is_action_pressed("cycle_shader"):
 		model.cycle_style()
+	elif event.is_action_pressed("toggle_edges"):
+		edge_highlight.visible = not edge_highlight.visible
 	elif event is InputEventMouseButton and event.pressed:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -112,6 +115,7 @@ func _setup_input() -> void:
 	_key("sprint", KEY_SHIFT)
 	_key("toggle_mouse", KEY_ESCAPE)
 	_key("cycle_shader", KEY_T)
+	_key("toggle_edges", KEY_E)
 	_axis("move_forward", JOY_AXIS_LEFT_Y, -1.0)
 	_axis("move_back", JOY_AXIS_LEFT_Y, 1.0)
 	_axis("move_left", JOY_AXIS_LEFT_X, -1.0)
@@ -123,6 +127,7 @@ func _setup_input() -> void:
 	_button("jump", JOY_BUTTON_A)
 	_button("sprint", JOY_BUTTON_LEFT_STICK)
 	_button("cycle_shader", JOY_BUTTON_Y)
+	_button("toggle_edges", JOY_BUTTON_X)
 
 
 func _ensure(action: StringName) -> void:
