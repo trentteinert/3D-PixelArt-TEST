@@ -18,6 +18,8 @@ uniform bool silhouette_outline = true;
 uniform float silhouette_shade : hint_range(0.0, 2.0) = 0.6;
 // Tick to see detected edges only: white = convex, black = concave, red = silhouette.
 uniform bool debug_edges = false;
+// Tick to leave the character (anything drawn with roughness 0.5, i.e. toon/outline) free of edge effects.
+uniform bool exclude_character = false;
 
 void vertex() {
 	POSITION = vec4(VERTEX.xy, 1.0, 1.0);
@@ -33,38 +35,57 @@ vec3 view_normal(vec2 uv) {
 	return normalize(texture(normal_tex, uv).xyz * 2.0 - 1.0);
 }
 
+// Roughness is stored in the buffer's alpha; sky pixels (depth 0) are never "character".
+bool is_character(vec2 uv) {
+	if (texture(depth_tex, uv).x < 0.000001) {
+		return false;
+	}
+	float w = texture(normal_tex, uv).w;
+	if (w > 0.5) {
+		w = 1.0 - w;
+	}
+	return w / (127.0 / 255.0) < 0.75;
+}
+
 void fragment() {
 	vec2 px = 1.0 / VIEWPORT_SIZE;
 	vec3 col = texture(screen_tex, SCREEN_UV).rgb;
 
-	vec3 p0 = view_pos(SCREEN_UV, INV_PROJECTION_MATRIX);
-	float d0 = -p0.z;
-	vec3 n0 = view_normal(SCREEN_UV);
+	if (exclude_character && is_character(SCREEN_UV)) {
+		ALBEDO = debug_edges ? vec3(0.5) : col;
+	} else {
+		vec3 p0 = view_pos(SCREEN_UV, INV_PROJECTION_MATRIX);
+		float d0 = -p0.z;
+		vec3 n0 = view_normal(SCREEN_UV);
 
-	vec2 offs[4] = vec2[](vec2(1.0, 0.0), vec2(-1.0, 0.0), vec2(0.0, 1.0), vec2(0.0, -1.0));
-	float max_depth_step = 0.0;
-	float normal_sum = 0.0;
-	for (int i = 0; i < 4; i++) {
-		vec2 uv = SCREEN_UV + offs[i] * px;
-		float d = -view_pos(uv, INV_PROJECTION_MATRIX).z;
-		max_depth_step = max(max_depth_step, d - d0);
-		// UV y points down, view-space y points up.
-		normal_sum += dot(n0 - view_normal(uv), vec3(offs[i].x, -offs[i].y, 0.0));
-	}
+		vec2 offs[4] = vec2[](vec2(1.0, 0.0), vec2(-1.0, 0.0), vec2(0.0, 1.0), vec2(0.0, -1.0));
+		float max_depth_step = 0.0;
+		float normal_sum = 0.0;
+		for (int i = 0; i < 4; i++) {
+			vec2 uv = SCREEN_UV + offs[i] * px;
+			if (exclude_character && is_character(uv)) {
+				continue;
+			}
+			float d = -view_pos(uv, INV_PROJECTION_MATRIX).z;
+			max_depth_step = max(max_depth_step, d - d0);
+			// UV y points down, view-space y points up.
+			normal_sum += dot(n0 - view_normal(uv), vec3(offs[i].x, -offs[i].y, 0.0));
+		}
 
-	// Surfaces seen at a grazing angle have big depth steps between pixels; relax the threshold.
-	float facing = max(abs(dot(n0, normalize(p0))), 0.15);
-	float thresh = depth_threshold * d0 / facing;
+		// Surfaces seen at a grazing angle have big depth steps between pixels; relax the threshold.
+		float facing = max(abs(dot(n0, normalize(p0))), 0.15);
+		float thresh = depth_threshold * d0 / facing;
 
-	if (debug_edges) {
-		col = vec3(0.5);
+		if (debug_edges) {
+			col = vec3(0.5);
+		}
+		if (silhouette_outline && max_depth_step > thresh) {
+			col = debug_edges ? vec3(1.0, 0.0, 0.0) : col * silhouette_shade;
+		} else if (normal_sum < -normal_threshold) {
+			col = debug_edges ? vec3(1.0) : mix(col, vec3(1.0), convex_highlight);
+		} else if (normal_sum > normal_threshold) {
+			col = debug_edges ? vec3(0.0) : col * concave_shadow;
+		}
+		ALBEDO = col;
 	}
-	if (silhouette_outline && max_depth_step > thresh) {
-		col = debug_edges ? vec3(1.0, 0.0, 0.0) : col * silhouette_shade;
-	} else if (normal_sum < -normal_threshold) {
-		col = debug_edges ? vec3(1.0) : mix(col, vec3(1.0), convex_highlight);
-	} else if (normal_sum > normal_threshold) {
-		col = debug_edges ? vec3(0.0) : col * concave_shadow;
-	}
-	ALBEDO = col;
 }

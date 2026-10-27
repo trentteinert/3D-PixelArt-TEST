@@ -10,6 +10,9 @@ uniform float rim_strength : hint_range(0.0, 1.0) = 0.25;
 
 void fragment() {
 	ALBEDO = albedo.rgb;
+	// Marks this surface as "character" in the normal/roughness buffer so edge_highlight can skip it.
+	// Level shaders leave roughness at 1.0.
+	ROUGHNESS = 0.5;
 	float rim = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), rim_power);
 	EMISSION = rim_color.rgb * rim * rim_strength;
 }

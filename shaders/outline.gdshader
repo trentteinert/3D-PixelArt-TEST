@@ -11,4 +11,5 @@ void vertex() {
 
 void fragment() {
 	ALBEDO = outline_color.rgb;
+	ROUGHNESS = 0.5;  // same "character" marker as toon.gdshader
 }
