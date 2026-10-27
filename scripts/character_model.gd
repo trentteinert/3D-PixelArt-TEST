@@ -5,7 +5,16 @@ extends Node3D
 
 enum Style { TOON_OUTLINE, TOON, PLAIN }
 
-var style: Style = Style.TOON_OUTLINE
+## Shader look of the character. TOON_OUTLINE adds the dark outline; PLAIN is an unshaded-style standard material.
+@export var style: Style = Style.TOON_OUTLINE:
+	set(value):
+		style = value
+		_apply_style()
+## The soft white edge glow from the toon shader.
+@export var rim_light := true:
+	set(value):
+		rim_light = value
+		_apply_rim()
 
 @onready var _body: Node3D = $Body
 @onready var _left_arm: Node3D = $Body/LeftArm
@@ -18,6 +27,7 @@ var _toon_outline: Array[Material] = []
 var _toon: Array[Material] = []
 var _plain: Array[Material] = []
 var _phase := 0.0
+var _rim_strength := 0.25
 
 
 func _ready() -> void:
@@ -33,6 +43,9 @@ func _ready() -> void:
 		_toon_outline.append(with_outline)
 		_toon.append(no_outline)
 		_plain.append(plain)
+	_rim_strength = (_toon_outline[0] as ShaderMaterial).get_shader_parameter("rim_strength")
+	_apply_style()
+	_apply_rim()
 
 
 ## speed is horizontal speed in m/s, run_speed is the speed that counts as a full stride.
@@ -65,7 +78,20 @@ func animate(delta: float, speed: float, on_floor: bool, vertical_speed: float, 
 
 func cycle_style() -> void:
 	style = ((style + 1) % Style.size()) as Style
+	print("Character style: ", Style.keys()[style])
+
+
+func _apply_style() -> void:
+	if _meshes.is_empty():
+		return  # not ready yet; _ready applies it
 	var materials: Array = [_toon_outline, _toon, _plain][style]
 	for i in _meshes.size():
 		_meshes[i].material_override = materials[i]
-	print("Character style: ", Style.keys()[style])
+
+
+func _apply_rim() -> void:
+	if _meshes.is_empty():
+		return
+	var strength := _rim_strength if rim_light else 0.0
+	for m in _toon_outline + _toon:
+		(m as ShaderMaterial).set_shader_parameter("rim_strength", strength)

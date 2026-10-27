@@ -13,6 +13,8 @@ uniform float normal_threshold : hint_range(0.0, 2.0) = 0.4;
 // How far convex edges are blended toward white (works on dark surfaces too).
 uniform float convex_highlight : hint_range(0.0, 1.0) = 0.35;
 uniform float concave_shadow : hint_range(0.0, 1.0) = 0.7;
+// Untick to remove the outline where an object meets whatever is behind it.
+uniform bool silhouette_outline = true;
 uniform float silhouette_shade : hint_range(0.0, 2.0) = 0.6;
 // Tick to see detected edges only: white = convex, black = concave, red = silhouette.
 uniform bool debug_edges = false;
@@ -57,7 +59,7 @@ void fragment() {
 	if (debug_edges) {
 		col = vec3(0.5);
 	}
-	if (max_depth_step > thresh) {
+	if (silhouette_outline && max_depth_step > thresh) {
 		col = debug_edges ? vec3(1.0, 0.0, 0.0) : col * silhouette_shade;
 	} else if (normal_sum < -normal_threshold) {
 		col = debug_edges ? vec3(1.0) : mix(col, vec3(1.0), convex_highlight);
