@@ -1,10 +1,23 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://bnxlh0i2xx6u3"]
 
-[ext_resource type="Script" path="res://scripts/test_area.gd" id="1"]
+[ext_resource type="Script" uid="uid://b4hr2jwjwx8hp" path="res://scripts/test_area.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2"]
 
-[node name="TestArea" type="Node3D"]
+[node name="TestArea" type="Node3D" unique_id=465513135]
 script = ExtResource("1")
 
-[node name="Player" parent="." instance=ExtResource("2")]
+[node name="SubViewportContainer" type="SubViewportContainer" parent="." unique_id=1813916895]
+texture_filter = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+stretch_shrink = 4
+
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer" unique_id=1105722141]
+size = Vector2i(320, 180)
+
+[node name="Player" parent="SubViewportContainer/SubViewport" unique_id=1819165308 instance=ExtResource("2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
