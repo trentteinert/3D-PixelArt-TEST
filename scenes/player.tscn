@@ -4,10 +4,17 @@
 [ext_resource type="Script" path="res://scripts/character_model.gd" id="model_gd"]
 [ext_resource type="Shader" path="res://shaders/toon.gdshader" id="toon"]
 [ext_resource type="Shader" path="res://shaders/outline.gdshader" id="outline"]
+[ext_resource type="Shader" path="res://shaders/edge_highlight.gdshader" id="edge"]
 
 [sub_resource type="CapsuleShape3D" id="col"]
 radius = 0.35
 height = 1.8
+
+[sub_resource type="QuadMesh" id="edge_quad"]
+size = Vector2(2, 2)
+
+[sub_resource type="ShaderMaterial" id="edge_mat"]
+shader = ExtResource("edge")
 
 [sub_resource type="ShaderMaterial" id="outline_mat"]
 shader = ExtResource("outline")
@@ -155,3 +162,9 @@ margin = 0.2
 [node name="Camera3D" type="Camera3D" parent="CameraPivot/SpringArm3D"]
 current = true
 fov = 70.0
+
+[node name="EdgeHighlight" type="MeshInstance3D" parent="CameraPivot/SpringArm3D/Camera3D"]
+mesh = SubResource("edge_quad")
+material_override = SubResource("edge_mat")
+extra_cull_margin = 16384.0
+cast_shadow = 0
