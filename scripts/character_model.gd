@@ -1,17 +1,21 @@
 class_name CharacterModel
 extends Node3D
-## Procedural animation + shader-style switching for the character nodes in player.tscn.
-## Faces -Z. Cycle the shader style with cycle_style() to compare looks.
+## Wraps the imported hero model: applies the toon shader to its meshes, handles the
+## shader-style switch (T key) and a simple bob while moving. Faces -Z.
+
+const TOON := preload("res://shaders/toon.gdshader")
+const OUTLINE := preload("res://shaders/outline.gdshader")
 
 enum Style { TOON_OUTLINE, TOON, PLAIN }
 
+## Base color of the toon material (the model has no materials of its own).
+@export var albedo := Color("c9d3e8")
+## Turn the model around if it walks backwards. glTF models usually face +Z, so 180 is the default.
+@export_range(-180.0, 180.0) var facing_offset_degrees := 180.0
+
 var style: Style = Style.TOON_OUTLINE
 
-@onready var _body: Node3D = $Body
-@onready var _left_arm: Node3D = $Body/LeftArm
-@onready var _right_arm: Node3D = $Body/RightArm
-@onready var _left_leg: Node3D = $LeftLeg
-@onready var _right_leg: Node3D = $RightLeg
+@onready var _hero: Node3D = $Hero
 
 var _meshes: Array[MeshInstance3D] = []
 var _toon_outline: Array[Material] = []
@@ -21,46 +25,31 @@ var _phase := 0.0
 
 
 func _ready() -> void:
-	# Build the three style variants from the materials set up in the scene.
-	for child in find_children("*", "MeshInstance3D"):
+	_hero.rotation.y = deg_to_rad(facing_offset_degrees)
+	for child in _hero.find_children("*", "MeshInstance3D"):
 		var mi := child as MeshInstance3D
-		var with_outline := mi.material_override as ShaderMaterial
-		var no_outline := with_outline.duplicate() as ShaderMaterial
-		no_outline.next_pass = null
+		var toon := ShaderMaterial.new()
+		toon.shader = TOON
+		toon.set_shader_parameter("albedo", albedo)
+		var outline := ShaderMaterial.new()
+		outline.shader = OUTLINE
+		var with_outline := toon.duplicate() as ShaderMaterial
+		with_outline.next_pass = outline
 		var plain := StandardMaterial3D.new()
-		plain.albedo_color = with_outline.get_shader_parameter("albedo")
+		plain.albedo_color = albedo
 		_meshes.append(mi)
 		_toon_outline.append(with_outline)
-		_toon.append(no_outline)
+		_toon.append(toon)
 		_plain.append(plain)
+		mi.material_override = with_outline
 
 
-## speed is horizontal speed in m/s, run_speed is the speed that counts as a full stride.
-func animate(delta: float, speed: float, on_floor: bool, vertical_speed: float, run_speed: float) -> void:
+## speed is horizontal speed in m/s, run_speed is the speed that counts as a full run.
+func animate(delta: float, speed: float, on_floor: bool, _vertical_speed: float, run_speed: float) -> void:
 	var amount := clampf(speed / run_speed, 0.0, 1.0)
 	_phase += delta * (6.0 + speed * 1.6)
-	var swing := sin(_phase) * 0.9 * amount
-	var bob := absf(sin(_phase)) * 0.06 * amount
-
-	var l_arm := swing
-	var r_arm := -swing
-	var l_leg := -swing
-	var r_leg := swing
-	if not on_floor:
-		var air := clampf(vertical_speed * 0.08, -0.6, 0.6)
-		l_arm = -1.6 + air
-		r_arm = -1.6 + air
-		l_leg = 0.5
-		r_leg = -0.3
-		bob = 0.0
-
-	var t := 1.0 - exp(-delta * 16.0)
-	_left_arm.rotation.x = lerpf(_left_arm.rotation.x, l_arm, t)
-	_right_arm.rotation.x = lerpf(_right_arm.rotation.x, r_arm, t)
-	_left_leg.rotation.x = lerpf(_left_leg.rotation.x, l_leg, t)
-	_right_leg.rotation.x = lerpf(_right_leg.rotation.x, r_leg, t)
-	_body.position.y = lerpf(_body.position.y, 1.0 + bob, t)
-	_body.rotation.x = lerpf(_body.rotation.x, -0.15 * amount, t)  # lean into the run
+	var bob := absf(sin(_phase)) * 0.06 * amount if on_floor else 0.0
+	_hero.position.y = lerpf(_hero.position.y, bob, 1.0 - exp(-delta * 16.0))
 
 
 func cycle_style() -> void:

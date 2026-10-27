@@ -2,9 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="player_gd"]
 [ext_resource type="Script" path="res://scripts/character_model.gd" id="model_gd"]
-[ext_resource type="Shader" path="res://shaders/toon.gdshader" id="toon"]
-[ext_resource type="Shader" path="res://shaders/outline.gdshader" id="outline"]
 [ext_resource type="Shader" path="res://shaders/edge_highlight.gdshader" id="edge"]
+[ext_resource type="PackedScene" path="res://models/hero.glb" id="hero"]
 
 [sub_resource type="CapsuleShape3D" id="col"]
 radius = 0.35
@@ -16,65 +15,6 @@ size = Vector2(2, 2)
 [sub_resource type="ShaderMaterial" id="edge_mat"]
 shader = ExtResource("edge")
 
-[sub_resource type="ShaderMaterial" id="outline_mat"]
-shader = ExtResource("outline")
-
-[sub_resource type="ShaderMaterial" id="mat_skin"]
-shader = ExtResource("toon")
-shader_parameter/albedo = Color(0.9490, 0.7608, 0.6078, 1)
-next_pass = SubResource("outline_mat")
-
-[sub_resource type="ShaderMaterial" id="mat_shirt"]
-shader = ExtResource("toon")
-shader_parameter/albedo = Color(0.2471, 0.4980, 0.8510, 1)
-next_pass = SubResource("outline_mat")
-
-[sub_resource type="ShaderMaterial" id="mat_pants"]
-shader = ExtResource("toon")
-shader_parameter/albedo = Color(0.2000, 0.2196, 0.3020, 1)
-next_pass = SubResource("outline_mat")
-
-[sub_resource type="ShaderMaterial" id="mat_shoes"]
-shader = ExtResource("toon")
-shader_parameter/albedo = Color(0.9098, 0.9098, 0.9098, 1)
-next_pass = SubResource("outline_mat")
-
-[sub_resource type="CapsuleMesh" id="torso"]
-radius = 0.26
-height = 0.85
-radial_segments = 8
-rings = 3
-
-[sub_resource type="SphereMesh" id="head"]
-radius = 0.24
-height = 0.48
-radial_segments = 8
-rings = 4
-
-[sub_resource type="SphereMesh" id="eye"]
-radius = 0.04
-height = 0.08
-radial_segments = 8
-rings = 4
-
-[sub_resource type="CapsuleMesh" id="arm"]
-radius = 0.09
-height = 0.55
-radial_segments = 8
-rings = 3
-
-[sub_resource type="CapsuleMesh" id="leg"]
-radius = 0.11
-height = 0.7
-radial_segments = 8
-rings = 3
-
-[sub_resource type="SphereMesh" id="foot"]
-radius = 0.13
-height = 0.26
-radial_segments = 8
-rings = 4
-
 [node name="Player" type="CharacterBody3D"]
 script = ExtResource("player_gd")
 
@@ -85,70 +25,7 @@ shape = SubResource("col")
 [node name="Model" type="Node3D" parent="."]
 script = ExtResource("model_gd")
 
-[node name="Body" type="Node3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, 0, 1, 0)
-
-[node name="Torso" type="MeshInstance3D" parent="Model/Body"]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, 0, 0, 0)
-mesh = SubResource("torso")
-material_override = SubResource("mat_shirt")
-
-[node name="Head" type="MeshInstance3D" parent="Model/Body"]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, 0, 0.62, 0)
-mesh = SubResource("head")
-material_override = SubResource("mat_skin")
-
-[node name="EyeLeft" type="MeshInstance3D" parent="Model/Body"]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, -0.09, 0.66, -0.2)
-mesh = SubResource("eye")
-material_override = SubResource("mat_pants")
-
-[node name="EyeRight" type="MeshInstance3D" parent="Model/Body"]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, 0.09, 0.66, -0.2)
-mesh = SubResource("eye")
-material_override = SubResource("mat_pants")
-
-[node name="LeftArm" type="Node3D" parent="Model/Body"]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, -0.34, 0.25, 0)
-
-[node name="Mesh" type="MeshInstance3D" parent="Model/Body/LeftArm"]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, 0, -0.275, 0)
-mesh = SubResource("arm")
-material_override = SubResource("mat_skin")
-
-[node name="RightArm" type="Node3D" parent="Model/Body"]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, 0.34, 0.25, 0)
-
-[node name="Mesh" type="MeshInstance3D" parent="Model/Body/RightArm"]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, 0, -0.275, 0)
-mesh = SubResource("arm")
-material_override = SubResource("mat_skin")
-
-[node name="LeftLeg" type="Node3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, -0.13, 0.85, 0)
-
-[node name="Mesh" type="MeshInstance3D" parent="Model/LeftLeg"]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, 0, -0.35, 0)
-mesh = SubResource("leg")
-material_override = SubResource("mat_pants")
-
-[node name="Foot" type="MeshInstance3D" parent="Model/LeftLeg"]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, 0, -0.72, -0.04)
-mesh = SubResource("foot")
-material_override = SubResource("mat_shoes")
-
-[node name="RightLeg" type="Node3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, 0.13, 0.85, 0)
-
-[node name="Mesh" type="MeshInstance3D" parent="Model/RightLeg"]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, 0, -0.35, 0)
-mesh = SubResource("leg")
-material_override = SubResource("mat_pants")
-
-[node name="Foot" type="MeshInstance3D" parent="Model/RightLeg"]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, 0, -0.72, -0.04)
-mesh = SubResource("foot")
-material_override = SubResource("mat_shoes")
+[node name="Hero" parent="Model" instance=ExtResource("hero")]
 
 [node name="CameraPivot" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, 0, 1.5, 0)
