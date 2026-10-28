@@ -122,7 +122,8 @@ func _physics_process(delta: float) -> void:
 	var in_control := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and is_on_floor()
 	if in_control and Input.is_action_just_pressed("attack"):
 		model.attack()
-	if in_control and Input.is_action_just_pressed("roll") and _roll_cooldown_left <= 0.0 and not model.is_rolling:
+	var moving_input := Input.get_vector("move_left", "move_right", "move_forward", "move_back") != Vector2.ZERO
+	if in_control and moving_input and Input.is_action_just_pressed("roll") and _roll_cooldown_left <= 0.0 and not model.is_rolling:
 		_start_roll()
 	if model.is_rolling and _process_roll(delta):
 		return
