@@ -8,7 +8,6 @@ const OUTLINE := preload("res://shaders/outline.gdshader")
 
 ## Animation files exported from Mixamo on the same skeleton as the hero.
 const ANIMATION_FILES := {
-	"walk": "res://models/animations/walk.fbx",
 	"run": "res://models/animations/run.fbx",
 	"jump": "res://models/animations/jump.fbx",
 }
@@ -24,6 +23,16 @@ enum Style { TOON_OUTLINE, TOON, PLAIN }
 @export var walk_threshold := 0.5
 @export var run_threshold := 7.0
 @export var blend_time := 0.2
+## Walking reuses the run animation at this playback speed (1.0 = same as running).
+@export_range(0.1, 1.5) var walk_speed_scale := 0.55
+
+@export_group("Jump Timing")
+## Where in the jump animation (seconds) to start when you leave the ground. Skip the crouch by raising this.
+@export var jump_start_time := 0.0
+## Playback speed of the jump animation.
+@export_range(0.1, 3.0) var jump_speed_scale := 1.0
+## Freeze the jump pose at this time (seconds) while still in the air. 0 = play to the end, then hold.
+@export var jump_hold_time := 0.0
 
 var style: Style = Style.TOON_OUTLINE
 
@@ -48,13 +57,15 @@ func animate(_delta: float, speed: float, on_floor: bool, _vertical_speed: float
 	if _anim == null:
 		return
 	if not on_floor:
-		_play("jump", false)
+		_play("jump", "jump", false, jump_speed_scale, jump_start_time)
+		if jump_hold_time > 0.0 and _anim.current_animation_position >= jump_hold_time:
+			_anim.pause()
 	elif speed > run_threshold:
-		_play("run")
+		_play("run", "run")
 	elif speed > walk_threshold:
-		_play("walk")
+		_play("walk", "run", true, walk_speed_scale)
 	else:
-		_play("idle")
+		_play("idle", "idle")
 
 
 func cycle_style() -> void:
@@ -65,14 +76,17 @@ func cycle_style() -> void:
 	print("Character style: ", Style.keys()[style])
 
 
-func _play(anim_name: String, loop := true) -> void:
-	if _state == anim_name:
+## state is what we're doing; anim_name is which clip plays for it (walk reuses "run").
+func _play(state: String, anim_name: String, loop := true, speed := 1.0, start_time := 0.0) -> void:
+	if _state == state:
 		return
-	_state = anim_name
+	_state = state
 	var full := "%s/%s" % [LIBRARY, anim_name]
 	if _anim.has_animation(full):
 		_anim.get_animation(full).loop_mode = Animation.LOOP_LINEAR if loop else Animation.LOOP_NONE
-		_anim.play(full, blend_time)
+		_anim.play(full, blend_time, speed)
+		if start_time > 0.0:
+			_anim.seek(start_time, true)
 
 
 func _setup_materials() -> void:
@@ -124,7 +138,7 @@ func _setup_animations() -> void:
 		inst.free()
 
 	_anim.add_animation_library(LIBRARY, library)
-	_play("idle")
+	_play("idle", "idle")
 
 
 func _first_animation(player: AnimationPlayer) -> Animation:
