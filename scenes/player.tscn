@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/player.gd" id="player_gd"]
 [ext_resource type="Script" path="res://scripts/character_model.gd" id="model_gd"]
 [ext_resource type="Shader" path="res://shaders/edge_highlight.gdshader" id="edge"]
-[ext_resource type="PackedScene" path="res://models/hero.glb" id="hero"]
+[ext_resource type="PackedScene" path="res://models/hero.fbx" id="hero"]
 
 [sub_resource type="CapsuleShape3D" id="col"]
 radius = 0.35
