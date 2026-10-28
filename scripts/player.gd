@@ -153,8 +153,8 @@ func _physics_process(delta: float) -> void:
 	var local_accel := Basis(Vector3.UP, model.rotation.y).inverse() * Vector3(accel.x, 0.0, accel.y)
 	model.lean(delta, local_accel, _speed / sprint_speed)
 
-	_try_step_up()
-	move_and_slide()
+	if not _snap_up_to_stairs(delta):
+		move_and_slide()
 
 	# Ease out the pop from stepping up so the model glides up stairs instead of snapping.
 	model.position.y = lerpf(model.position.y, 0.0, 1.0 - exp(-14.0 * delta))
@@ -168,33 +168,37 @@ func _physics_process(delta: float) -> void:
 	model.animate(delta, horizontal.length(), is_on_floor(), velocity.y, sprint_speed)
 
 
-## Walks up ledges lower than step_height: if we'd hit a wall-like surface, check there is
-## headroom, that the way forward is clear one step higher, and that there is floor to land on.
-func _try_step_up() -> void:
+## Steps up onto ledges no taller than step_height. Looks where this frame's movement would
+## put us, drops a probe down from one step higher, and if it lands on a higher walkable
+## surface, moves us there in one go (forward AND up, so floor snapping can't pull us back).
+## Returns true if it moved the character, in which case move_and_slide() should be skipped.
+func _snap_up_to_stairs(delta: float) -> bool:
 	if not is_on_floor() or velocity.y > 0.1:
-		return
-	var motion := Vector3(velocity.x, 0.0, velocity.z) * get_physics_process_delta_time()
-	if motion.length() < 0.001:
-		return
-	# Probe a little further than this frame's motion so the riser is caught early.
-	var probe := motion.normalized() * maxf(motion.length(), 0.1)
-	var blocked := KinematicCollision3D.new()
-	if not test_move(global_transform, probe, blocked) or blocked.get_normal().y > 0.7:
-		return  # nothing in the way, or a walkable slope (move_and_slide handles those)
-	var up := Vector3.UP * step_height
-	if test_move(global_transform, up):
-		return  # no headroom
-	var raised := global_transform.translated(up)
-	if test_move(raised, probe):
-		return  # still blocked one step higher: a wall, not a step
-	var landing := KinematicCollision3D.new()
-	if not test_move(raised.translated(probe), -up, landing) or landing.get_normal().y < 0.7:
-		return  # nothing walkable to land on
-	var rise := step_height - landing.get_travel().length()
-	if rise <= 0.01:
-		return
-	global_position.y += rise
-	model.position.y -= rise
+		return false
+	var motion := Vector3(velocity.x, 0.0, velocity.z) * delta
+	if motion.length() < 0.0001:
+		return false
+	var reach := step_height * 2.0
+	if test_move(global_transform, Vector3.UP * reach):
+		return false  # no headroom
+	var start := global_transform.translated(motion + Vector3.UP * reach)
+	var down := KinematicCollision3D.new()
+	if not test_move(start, Vector3.DOWN * reach, down):
+		return false
+	var new_position := start.origin + down.get_travel()
+	var rise := new_position.y - global_position.y
+	if rise > step_height or rise <= 0.01:
+		return false  # too tall (a wall), or flat ground / negligible
+	# Confirm the surface we'd land on is walkable, not a steep face or an edge.
+	var ahead := down.get_position() + Vector3.UP * step_height + motion.normalized() * 0.1
+	var query := PhysicsRayQueryParameters3D.create(ahead, ahead + Vector3.DOWN * reach, collision_mask, [get_rid()])
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty() or hit.normal.y < cos(floor_max_angle):
+		return false
+	global_position = new_position
+	apply_floor_snap()
+	model.position.y -= rise  # ease the visual pop out in _physics_process
+	return true
 
 
 func _look(yaw_delta: float, pitch_delta: float) -> void:
