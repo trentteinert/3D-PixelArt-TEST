@@ -4,7 +4,7 @@ extends CharacterBody3D
 
 @export_group("Movement")
 @export var walk_speed := 5.0
-@export var sprint_speed := 9.0
+@export var sprint_speed := 6.0
 @export var acceleration := 35.0
 @export var air_acceleration := 15.0
 @export var friction := 40.0
