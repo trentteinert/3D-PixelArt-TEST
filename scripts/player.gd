@@ -27,8 +27,10 @@ extends CharacterBody3D
 
 @export_group("Combat")
 ## Fraction of normal speed while swinging the sword.
-@export_range(0.0, 1.0) var attack_move_scale := 0.3
-@export var roll_speed := 9.0
+@export_range(0.0, 1.0) var attack_move_scale := 0.85
+@export var roll_speed := 10.0
+## Once this fraction of the roll has played, moving or jumping hands control back.
+@export_range(0.0, 1.0) var roll_control_fraction := 0.55
 @export var roll_cooldown := 0.3
 
 @export_group("Jump")
@@ -118,8 +120,7 @@ func _physics_process(delta: float) -> void:
 		model.attack()
 	if in_control and Input.is_action_just_pressed("roll") and _roll_cooldown_left <= 0.0 and not model.is_rolling:
 		_start_roll()
-	if model.is_rolling:
-		_process_roll(delta)
+	if model.is_rolling and _process_roll(delta):
 		return
 
 	# Coyote time + jump buffering
@@ -207,13 +208,16 @@ func _start_roll() -> void:
 	_roll_cooldown_left = roll_cooldown
 
 
-func _process_roll(delta: float) -> void:
+## Returns true while the roll still owns the character this frame.
+func _process_roll(delta: float) -> bool:
 	_roll_time -= delta
-	if _roll_time <= 0.0:
-		model.end_roll()
-		return
-	# Fast at the start, easing off as the roll finishes.
 	var progress := 1.0 - _roll_time / _roll_duration
+	var wants_out := Input.get_vector("move_left", "move_right", "move_forward", "move_back") != Vector2.ZERO \
+		or Input.is_action_just_pressed("jump")
+	if _roll_time <= 0.0 or (progress >= roll_control_fraction and wants_out):
+		model.end_roll()
+		return false
+	# Fast at the start, easing off as the roll finishes.
 	var s := roll_speed * lerpf(1.0, 0.4, progress)
 	velocity.x = _roll_dir.x * s
 	velocity.z = _roll_dir.z * s
@@ -222,6 +226,7 @@ func _process_roll(delta: float) -> void:
 	if not _snap_up_to_stairs(delta):
 		move_and_slide()
 	model.animate(delta, s, is_on_floor(), velocity.y, sprint_speed)
+	return true
 
 
 ## Steps up onto ledges no taller than step_height. Looks where this frame's movement would

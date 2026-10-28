@@ -65,15 +65,18 @@ enum Style { TOON_OUTLINE, TOON, PLAIN }
 @export var sword_scale := 1.0
 
 @export_group("Attack")
-@export var attack_speed_scale := 1.2
+@export var attack_speed_scale := 1.5
 ## Seconds into the attack animation (after speed scaling is NOT applied) when the blade starts and stops hurting.
 @export var hit_start_time := 0.35
 @export var hit_end_time := 0.75
+## After this many seconds into the swing, moving or jumping cancels the recovery and goes
+## straight back to running. Set it above the clip length to always play the whole swing.
+@export var attack_cancel_time := 0.8
 
 @export_group("Roll")
 ## Skips the falling part at the start of the roll clip. Raise until the roll starts as you want.
 @export var roll_start_time := 0.0
-@export_range(0.5, 3.0) var roll_speed_scale := 1.2
+@export_range(0.5, 3.0) var roll_speed_scale := 1.6
 
 var style: Style = Style.TOON_OUTLINE
 var is_attacking := false
@@ -142,14 +145,17 @@ func animate(_delta: float, speed: float, on_floor: bool, _vertical_speed: float
 		return
 	if is_attacking:
 		var t := _anim.current_animation_position
-		var active := t >= hit_start_time and t <= hit_end_time
-		if active != _swing_active:
-			_swing_active = active
-			if _sword and active:
-				_sword.begin_swing()
-			elif _sword:
-				_sword.end_swing()
-		return
+		if t >= attack_cancel_time and (speed > walk_threshold or not on_floor):
+			_end_attack()  # cancel the recovery, fall through to normal movement animations
+		else:
+			var active := t >= hit_start_time and t <= hit_end_time
+			if active != _swing_active:
+				_swing_active = active
+				if _sword and active:
+					_sword.begin_swing()
+				elif _sword:
+					_sword.end_swing()
+			return
 	if not on_floor:
 		_play("jump", "jump", false, jump_speed_scale, jump_start_time)
 		if jump_hold_time > 0.0 and _anim.current_animation_position >= jump_hold_time:
