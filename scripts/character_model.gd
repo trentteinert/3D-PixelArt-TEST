@@ -24,7 +24,7 @@ enum Style { TOON_OUTLINE, TOON, PLAIN }
 @export var run_threshold := 7.0
 @export var blend_time := 0.2
 ## Walking reuses the run animation at this playback speed (1.0 = same as running).
-@export_range(0.1, 1.5) var walk_speed_scale := 0.55
+@export_range(0.1, 1.5) var walk_speed_scale := 1
 ## Scale the run/walk animation with actual ground speed so the feet don't skate.
 @export var sync_animation_to_speed := true
 ## Ground speed (m/s) at which the run animation looks right at normal playback speed.
@@ -32,18 +32,18 @@ enum Style { TOON_OUTLINE, TOON, PLAIN }
 
 @export_group("Lean")
 ## Constant forward tilt (degrees) at full speed.
-@export var speed_lean_degrees := 8.0
+@export var speed_lean_degrees := 4.0
 ## Extra tilt (degrees) per m/s² of acceleration: leans forward when speeding up, back when braking.
 @export var accel_lean_degrees := 0.6
 ## Sideways banking (degrees) per m/s² of sideways acceleration, i.e. into turns.
 @export var turn_lean_degrees := 0.7
-@export var max_lean_degrees := 18.0
+@export var max_lean_degrees := 12.0
 ## How quickly the lean follows (higher = snappier).
 @export var lean_smoothing := 10.0
 
 @export_group("Jump Timing")
 ## Where in the jump animation (seconds) to start when you leave the ground. Skip the crouch by raising this.
-@export var jump_start_time := 0.0
+@export var jump_start_time := 0.3
 ## Playback speed of the jump animation.
 @export_range(0.1, 3.0) var jump_speed_scale := 1.0
 ## Freeze the jump pose at this time (seconds) while still in the air. 0 = play to the end, then hold.

@@ -1,47 +1,55 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://byi26b3k17cnw"]
 
-[ext_resource type="Script" path="res://scripts/player.gd" id="player_gd"]
-[ext_resource type="Script" path="res://scripts/character_model.gd" id="model_gd"]
-[ext_resource type="Shader" path="res://shaders/edge_highlight.gdshader" id="edge"]
-[ext_resource type="PackedScene" path="res://models/hero.fbx" id="hero"]
+[ext_resource type="Shader" uid="uid://dsvv3hguefuff" path="res://shaders/edge_highlight.gdshader" id="edge"]
+[ext_resource type="PackedScene" uid="uid://bshfw4035ul2n" path="res://models/hero.fbx" id="hero"]
+[ext_resource type="Script" uid="uid://ceexi5x8rp0fh" path="res://scripts/character_model.gd" id="model_gd"]
+[ext_resource type="Script" uid="uid://c3eb1w15gu50" path="res://scripts/player.gd" id="player_gd"]
 
 [sub_resource type="CapsuleShape3D" id="col"]
 radius = 0.35
 height = 1.8
 
+[sub_resource type="ShaderMaterial" id="edge_mat"]
+render_priority = 0
+shader = ExtResource("edge")
+shader_parameter/depth_threshold = 0.03
+shader_parameter/normal_threshold = 0.4
+shader_parameter/convex_highlight = 0.35
+shader_parameter/concave_shadow = 0.7
+shader_parameter/silhouette_outline = true
+shader_parameter/silhouette_shade = 0.6
+shader_parameter/debug_edges = false
+shader_parameter/exclude_character = false
+
 [sub_resource type="QuadMesh" id="edge_quad"]
 size = Vector2(2, 2)
 
-[sub_resource type="ShaderMaterial" id="edge_mat"]
-shader = ExtResource("edge")
-
-[node name="Player" type="CharacterBody3D"]
+[node name="Player" type="CharacterBody3D" unique_id=1831308733]
 script = ExtResource("player_gd")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, 0, 0.9, 0)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1647597758]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("col")
 
-[node name="Model" type="Node3D" parent="."]
+[node name="Model" type="Node3D" parent="." unique_id=877956943]
 script = ExtResource("model_gd")
 
-[node name="Hero" parent="Model" instance=ExtResource("hero")]
+[node name="Hero" parent="Model" unique_id=175116752 instance=ExtResource("hero")]
 
-[node name="CameraPivot" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1.000000, -0.000000, 0, 0.000000, 1.000000, 0, 1.5, 0)
+[node name="CameraPivot" type="Node3D" parent="." unique_id=1539097980]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 
-[node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot"]
-transform = Transform3D(1, 0, 0, 0, 0.866025, 0.500000, 0, -0.500000, 0.866025, 0, 0, 0)
-collision_mask = 1
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot" unique_id=937312371]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 0, 0)
 spring_length = 4.5
 margin = 0.2
 
-[node name="Camera3D" type="Camera3D" parent="CameraPivot/SpringArm3D"]
+[node name="Camera3D" type="Camera3D" parent="CameraPivot/SpringArm3D" unique_id=1802891524]
 current = true
 fov = 70.0
 
-[node name="EdgeHighlight" type="MeshInstance3D" parent="CameraPivot/SpringArm3D/Camera3D"]
-mesh = SubResource("edge_quad")
+[node name="EdgeHighlight" type="MeshInstance3D" parent="CameraPivot/SpringArm3D/Camera3D" unique_id=440030857]
 material_override = SubResource("edge_mat")
-extra_cull_margin = 16384.0
 cast_shadow = 0
+extra_cull_margin = 16384.0
+mesh = SubResource("edge_quad")
