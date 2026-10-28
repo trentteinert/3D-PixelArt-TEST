@@ -28,7 +28,11 @@ extends CharacterBody3D
 @export_group("Combat")
 ## Fraction of normal speed while swinging the sword.
 @export_range(0.0, 1.0) var attack_move_scale := 0.85
-@export var roll_speed := 10.0
+## The roll starts at your current speed times this, so a standing roll is short and a sprint roll is long.
+@export var roll_speed_multiplier := 1.1
+## Roll speed is kept within this range (m/s). The minimum is what a roll from standing still uses.
+@export var roll_min_speed := 3.5
+@export var roll_max_speed := 7.0
 ## Once this fraction of the roll has played, moving or jumping hands control back.
 @export_range(0.0, 1.0) var roll_control_fraction := 0.55
 @export var roll_cooldown := 0.3
@@ -61,6 +65,7 @@ var _jump_buffer := 0.0
 var _pitch := -0.5
 var _speed := 0.0
 var _roll_dir := Vector3.ZERO
+var _roll_speed := 0.0
 var _roll_time := 0.0
 var _roll_duration := 1.0
 var _roll_cooldown_left := 0.0
@@ -200,6 +205,7 @@ func _start_roll() -> void:
 	if dir.length() < 0.1:
 		dir = Vector3(-sin(model.rotation.y), 0.0, -cos(model.rotation.y))
 	_roll_dir = dir.normalized()
+	_roll_speed = clampf(_speed * roll_speed_multiplier, roll_min_speed, roll_max_speed)
 	model.rotation.y = atan2(-_roll_dir.x, -_roll_dir.z)
 	_roll_duration = model.roll()
 	if _roll_duration <= 0.0:
@@ -218,7 +224,7 @@ func _process_roll(delta: float) -> bool:
 		model.end_roll()
 		return false
 	# Fast at the start, easing off as the roll finishes.
-	var s := roll_speed * lerpf(1.0, 0.4, progress)
+	var s := _roll_speed * lerpf(1.0, 0.4, progress)
 	velocity.x = _roll_dir.x * s
 	velocity.z = _roll_dir.z * s
 	_speed = s
