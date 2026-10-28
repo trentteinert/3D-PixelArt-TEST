@@ -10,6 +10,8 @@ Godot 4.3+ sandbox for third-person movement and shader experiments. Open the fo
 | Space | Jump (hold for higher) |
 | T / Y button | Cycle character shader: toon+outline, toon, plain |
 | E / X button | Toggle edge highlight shader |
+| F / left click / right bumper | Sword attack |
+| C / B button | Roll |
 | Esc | Release / recapture mouse |
 
 - `scenes/test_area.tscn` – main scene; every object is a node (edit under `Level/`), inside a SubViewport for pixelation

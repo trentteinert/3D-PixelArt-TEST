@@ -2,6 +2,7 @@
 
 [ext_resource type="Shader" uid="uid://qmumjydpyc70" path="res://shaders/grid.gdshader" id="grid"]
 [ext_resource type="PackedScene" uid="uid://byi26b3k17cnw" path="res://scenes/player.tscn" id="player"]
+[ext_resource type="PackedScene" path="res://scenes/target_dummy.tscn" id="dummy_scene"]
 
 [sub_resource type="ProceduralSkyMaterial" id="skymat"]
 sky_top_color = Color(0.2902, 0.4824, 0.8157, 1)
@@ -587,3 +588,9 @@ surface_material_override/0 = SubResource("g22")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="SubViewportContainer/SubViewport/Level/ArenaWalls/West" unique_id=181383588]
 shape = SubResource("s22")
+
+[node name="TargetDummy1" parent="SubViewportContainer/SubViewport/Level" instance=ExtResource("dummy_scene")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -4)
+
+[node name="TargetDummy2" parent="SubViewportContainer/SubViewport/Level" instance=ExtResource("dummy_scene")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -4)

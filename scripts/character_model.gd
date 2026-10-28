@@ -10,8 +10,14 @@ const OUTLINE := preload("res://shaders/outline.gdshader")
 const ANIMATION_FILES := {
 	"run": "res://models/animations/run.fbx",
 	"jump": "res://models/animations/jump.fbx",
+	"attack": "res://models/animations/attack.fbx",
+	"roll": "res://models/animations/roll.fbx",
 }
 const LIBRARY := "locomotion"
+const SWORD_SCENE := preload("res://scenes/sword.tscn")
+## Hand-bone axes (read from the Mixamo rig): +Y points along the fingers, +X toward the thumb,
+## +Z out of the palm. This puts the blade along the thumb side with the edge along the fingers.
+const GRIP_BASIS := Basis(Vector3(0, 1, 0), Vector3(1, 0, 0), Vector3(0, 0, -1))
 
 enum Style { TOON_OUTLINE, TOON, PLAIN }
 
@@ -49,7 +55,29 @@ enum Style { TOON_OUTLINE, TOON, PLAIN }
 ## Freeze the jump pose at this time (seconds) while still in the air. 0 = play to the end, then hold.
 @export var jump_hold_time := 0.0
 
+@export_group("Sword")
+## Held in the hand bone whose name ends with this.
+@export var sword_bone_suffix := "RightHand"
+## Offset in meters from the wrist bone: x = thumb side, y = along the fingers, z = out of the palm.
+@export var sword_offset := Vector3(0.0, 0.09, 0.03)
+## Extra rotation (degrees) applied on top of the default grip. Y spins the sword around its blade.
+@export var sword_rotation_degrees := Vector3.ZERO
+@export var sword_scale := 1.0
+
+@export_group("Attack")
+@export var attack_speed_scale := 1.2
+## Seconds into the attack animation (after speed scaling is NOT applied) when the blade starts and stops hurting.
+@export var hit_start_time := 0.35
+@export var hit_end_time := 0.75
+
+@export_group("Roll")
+## Skips the falling part at the start of the roll clip. Raise until the roll starts as you want.
+@export var roll_start_time := 0.0
+@export_range(0.5, 3.0) var roll_speed_scale := 1.2
+
 var style: Style = Style.TOON_OUTLINE
+var is_attacking := false
+var is_rolling := false
 
 @onready var _hero: Node3D = $Hero
 
@@ -59,17 +87,66 @@ var _toon: Array[Material] = []
 var _plain: Array[Material] = []
 var _anim: AnimationPlayer
 var _state := ""
+var _sword: Node3D
+var _sword_attachment: BoneAttachment3D
+var _swing_active := false
 
 
 func _ready() -> void:
 	_hero.rotation.y = deg_to_rad(facing_offset_degrees)
 	_setup_materials()
 	_setup_animations()
+	_attach_sword()
+
+
+## Starts the sword swing. Returns false if busy or the clip is missing.
+func attack() -> bool:
+	if _anim == null or is_attacking or is_rolling or not _anim.has_animation(LIBRARY + "/attack"):
+		return false
+	is_attacking = true
+	_state = "attack"
+	_anim.get_animation(LIBRARY + "/attack").loop_mode = Animation.LOOP_NONE
+	_anim.speed_scale = attack_speed_scale
+	_anim.play(LIBRARY + "/attack", 0.1)
+	return true
+
+
+## Starts the roll. Returns how long it lasts in seconds, or 0.0 if it can't roll right now.
+func roll() -> float:
+	if _anim == null or is_rolling or not _anim.has_animation(LIBRARY + "/roll"):
+		return 0.0
+	_end_attack()
+	is_rolling = true
+	_state = "roll"
+	var clip := _anim.get_animation(LIBRARY + "/roll")
+	clip.loop_mode = Animation.LOOP_NONE
+	_anim.speed_scale = roll_speed_scale
+	_anim.play(LIBRARY + "/roll", 0.1)
+	if roll_start_time > 0.0:
+		_anim.seek(roll_start_time, true)
+	return maxf(clip.length - roll_start_time, 0.1) / roll_speed_scale
+
+
+func end_roll() -> void:
+	if is_rolling:
+		is_rolling = false
+		_state = ""
 
 
 ## speed is horizontal speed in m/s. run_speed is unused (kept so player.gd's call stays the same).
 func animate(_delta: float, speed: float, on_floor: bool, _vertical_speed: float, _run_speed: float) -> void:
+	_update_sword_grip()
 	if _anim == null:
+		return
+	if is_rolling:
+		return
+	if is_attacking:
+		var t := _anim.current_animation_position
+		var active := t >= hit_start_time and t <= hit_end_time
+		if active != _swing_active:
+			_swing_active = active
+			if _sword:
+				_sword.begin_swing() if active else _sword.end_swing()
 		return
 	if not on_floor:
 		_play("jump", "jump", false, jump_speed_scale, jump_start_time)
@@ -173,6 +250,7 @@ func _setup_animations() -> void:
 		inst.free()
 
 	_anim.add_animation_library(LIBRARY, library)
+	_anim.animation_finished.connect(_on_animation_finished)
 	_play("idle", "idle")
 
 
@@ -203,3 +281,55 @@ func _strip_horizontal_motion(anim: Animation, track: int) -> void:
 	for k in count:
 		var v: Vector3 = anim.track_get_key_value(track, k)
 		anim.track_set_key_value(track, k, Vector3(first.x, v.y, first.z))
+
+
+func _on_animation_finished(anim_name: StringName) -> void:
+	if anim_name == LIBRARY + "/attack":
+		_end_attack()
+	elif anim_name == LIBRARY + "/roll":
+		end_roll()
+
+
+func _end_attack() -> void:
+	if not is_attacking:
+		return
+	is_attacking = false
+	_state = ""
+	if _swing_active and _sword:
+		_sword.end_swing()
+	_swing_active = false
+
+
+## Parents the sword to the hand bone so it follows the animation.
+func _attach_sword() -> void:
+	var skeleton := _hero.find_child("Skeleton3D", true, false) as Skeleton3D
+	if skeleton == null:
+		return
+	var bone_name := ""
+	for i in skeleton.get_bone_count():
+		if skeleton.get_bone_name(i).ends_with(sword_bone_suffix):
+			bone_name = skeleton.get_bone_name(i)
+			break
+	if bone_name == "":
+		push_warning("CharacterModel: no bone ending in '%s', sword not attached" % sword_bone_suffix)
+		return
+	_sword_attachment = BoneAttachment3D.new()
+	_sword_attachment.name = "SwordAttachment"
+	skeleton.add_child(_sword_attachment)
+	_sword_attachment.bone_name = bone_name
+	_sword = SWORD_SCENE.instantiate()
+	_sword_attachment.add_child(_sword)
+
+
+# The imported rig may carry a unit scale (e.g. centimeters), so counter it each frame to keep
+# the sword's offset in meters and its size at sword_scale.
+func _update_sword_grip() -> void:
+	if _sword == null:
+		return
+	var unit := _sword_attachment.global_basis.get_scale().x
+	if unit < 0.0001:
+		return
+	var grip := GRIP_BASIS * Basis.from_euler(Vector3(
+		deg_to_rad(sword_rotation_degrees.x), deg_to_rad(sword_rotation_degrees.y), deg_to_rad(sword_rotation_degrees.z)))
+	_sword.basis = grip.scaled(Vector3.ONE * sword_scale / unit)
+	_sword.position = sword_offset / unit

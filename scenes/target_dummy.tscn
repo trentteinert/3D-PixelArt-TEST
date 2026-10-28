@@ -1,0 +1,91 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/target_dummy.gd" id="dummy_gd"]
+[ext_resource type="Shader" path="res://shaders/toon.gdshader" id="toon"]
+
+[sub_resource type="ShaderMaterial" id="m_base"]
+shader = ExtResource("toon")
+shader_parameter/albedo = Color(0.3529, 0.2745, 0.1961, 1)
+
+[sub_resource type="ShaderMaterial" id="m_post"]
+shader = ExtResource("toon")
+shader_parameter/albedo = Color(0.5412, 0.4157, 0.2706, 1)
+
+[sub_resource type="ShaderMaterial" id="m_straw"]
+shader = ExtResource("toon")
+shader_parameter/albedo = Color(0.8471, 0.7529, 0.4784, 1)
+
+[sub_resource type="ShaderMaterial" id="m_head"]
+shader = ExtResource("toon")
+shader_parameter/albedo = Color(0.8784, 0.8039, 0.5608, 1)
+
+[sub_resource type="CapsuleShape3D" id="col"]
+radius = 0.45
+height = 1.9
+
+[sub_resource type="CylinderMesh" id="base_m"]
+top_radius = 0.45
+bottom_radius = 0.45
+height = 0.1
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="post_m"]
+top_radius = 0.08
+bottom_radius = 0.08
+height = 1.2
+radial_segments = 8
+
+[sub_resource type="BoxMesh" id="torso_m"]
+size = Vector3(0.6, 0.8, 0.3)
+
+[sub_resource type="BoxMesh" id="arms_m"]
+size = Vector3(1.0, 0.12, 0.12)
+
+[sub_resource type="SphereMesh" id="head_m"]
+radius = 0.2
+height = 0.4
+radial_segments = 8
+rings = 4
+
+[node name="TargetDummy" type="StaticBody3D"]
+script = ExtResource("dummy_gd")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
+shape = SubResource("col")
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Base" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+mesh = SubResource("base_m")
+material_override = SubResource("m_base")
+
+[node name="Post" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+mesh = SubResource("post_m")
+material_override = SubResource("m_post")
+
+[node name="Torso" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+mesh = SubResource("torso_m")
+material_override = SubResource("m_straw")
+
+[node name="Arms" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
+mesh = SubResource("arms_m")
+material_override = SubResource("m_post")
+
+[node name="Head" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.85, 0)
+mesh = SubResource("head_m")
+material_override = SubResource("m_head")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
+billboard = 1
+no_depth_test = true
+pixel_size = 0.006
+font_size = 48
+outline_size = 12
+text = "Dummy"

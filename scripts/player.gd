@@ -25,6 +25,12 @@ extends CharacterBody3D
 ## How far below the feet the floor is still "stuck to", so running down stairs and slopes doesn't bounce.
 @export var floor_snap := 0.4
 
+@export_group("Combat")
+## Fraction of normal speed while swinging the sword.
+@export_range(0.0, 1.0) var attack_move_scale := 0.3
+@export var roll_speed := 9.0
+@export var roll_cooldown := 0.3
+
 @export_group("Jump")
 @export var jump_velocity := 7.5
 @export var gravity_scale := 2.0
@@ -52,6 +58,10 @@ var _coyote := 0.0
 var _jump_buffer := 0.0
 var _pitch := -0.5
 var _speed := 0.0
+var _roll_dir := Vector3.ZERO
+var _roll_time := 0.0
+var _roll_duration := 1.0
+var _roll_cooldown_left := 0.0
 var _camera_offset := Vector3.ZERO
 var _base_fov := 70.0
 
@@ -101,6 +111,17 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= _gravity * gravity_scale * delta
 
+	# Combat inputs
+	_roll_cooldown_left = maxf(_roll_cooldown_left - delta, 0.0)
+	var in_control := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and is_on_floor()
+	if in_control and Input.is_action_just_pressed("attack"):
+		model.attack()
+	if in_control and Input.is_action_just_pressed("roll") and _roll_cooldown_left <= 0.0 and not model.is_rolling:
+		_start_roll()
+	if model.is_rolling:
+		_process_roll(delta)
+		return
+
 	# Coyote time + jump buffering
 	_coyote = coyote_time if is_on_floor() else maxf(_coyote - delta, 0.0)
 	_jump_buffer = jump_buffer_time if Input.is_action_just_pressed("jump") else maxf(_jump_buffer - delta, 0.0)
@@ -118,6 +139,8 @@ func _physics_process(delta: float) -> void:
 	dir = dir.normalized() * input.length()
 
 	var top_speed := sprint_speed if Input.is_action_pressed("sprint") else walk_speed
+	if model.is_attacking:
+		top_speed *= attack_move_scale
 	var horizontal := Vector2(velocity.x, velocity.z)
 	var previous_horizontal := horizontal
 	var target := Vector2(dir.x, dir.z) * top_speed
@@ -166,6 +189,39 @@ func _physics_process(delta: float) -> void:
 		model.rotation.y = lerp_angle(model.rotation.y, yaw, 1.0 - exp(-turn_speed * delta))
 
 	model.animate(delta, horizontal.length(), is_on_floor(), velocity.y, sprint_speed)
+
+
+## Rolls in the input direction (or the way the character already faces).
+func _start_roll() -> void:
+	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var dir := camera_pivot.global_basis * Vector3(input.x, 0.0, input.y)
+	dir.y = 0.0
+	if dir.length() < 0.1:
+		dir = Vector3(-sin(model.rotation.y), 0.0, -cos(model.rotation.y))
+	_roll_dir = dir.normalized()
+	model.rotation.y = atan2(-_roll_dir.x, -_roll_dir.z)
+	_roll_duration = model.roll()
+	if _roll_duration <= 0.0:
+		return
+	_roll_time = _roll_duration
+	_roll_cooldown_left = roll_cooldown
+
+
+func _process_roll(delta: float) -> void:
+	_roll_time -= delta
+	if _roll_time <= 0.0:
+		model.end_roll()
+		return
+	# Fast at the start, easing off as the roll finishes.
+	var progress := 1.0 - _roll_time / _roll_duration
+	var s := roll_speed * lerpf(1.0, 0.4, progress)
+	velocity.x = _roll_dir.x * s
+	velocity.z = _roll_dir.z * s
+	_speed = s
+	model.lean(delta, Vector3.ZERO, 0.0)
+	if not _snap_up_to_stairs(delta):
+		move_and_slide()
+	model.animate(delta, s, is_on_floor(), velocity.y, sprint_speed)
 
 
 ## Steps up onto ledges no taller than step_height. Looks where this frame's movement would
@@ -219,6 +275,9 @@ func _setup_input() -> void:
 	_key("toggle_mouse", KEY_ESCAPE)
 	_key("cycle_shader", KEY_T)
 	_key("toggle_edges", KEY_E)
+	_key("roll", KEY_C)
+	_key("attack", KEY_F)
+	_mouse("attack", MOUSE_BUTTON_LEFT)
 	_axis("move_forward", JOY_AXIS_LEFT_Y, -1.0)
 	_axis("move_back", JOY_AXIS_LEFT_Y, 1.0)
 	_axis("move_left", JOY_AXIS_LEFT_X, -1.0)
@@ -231,6 +290,8 @@ func _setup_input() -> void:
 	_button("sprint", JOY_BUTTON_LEFT_STICK)
 	_button("cycle_shader", JOY_BUTTON_Y)
 	_button("toggle_edges", JOY_BUTTON_X)
+	_button("roll", JOY_BUTTON_B)
+	_button("attack", JOY_BUTTON_RIGHT_SHOULDER)
 
 
 func _ensure(action: StringName) -> void:
@@ -242,6 +303,13 @@ func _key(action: StringName, keycode: Key) -> void:
 	_ensure(action)
 	var e := InputEventKey.new()
 	e.physical_keycode = keycode
+	InputMap.action_add_event(action, e)
+
+
+func _mouse(action: StringName, button: MouseButton) -> void:
+	_ensure(action)
+	var e := InputEventMouseButton.new()
+	e.button_index = button
 	InputMap.action_add_event(action, e)
 
 

@@ -1,0 +1,70 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/sword.gd" id="sword_gd"]
+[ext_resource type="Shader" path="res://shaders/toon.gdshader" id="toon"]
+
+[sub_resource type="ShaderMaterial" id="steel"]
+shader = ExtResource("toon")
+shader_parameter/albedo = Color(0.7843, 0.8235, 0.8706, 1)
+
+[sub_resource type="ShaderMaterial" id="gold"]
+shader = ExtResource("toon")
+shader_parameter/albedo = Color(0.8510, 0.6627, 0.2275, 1)
+
+[sub_resource type="ShaderMaterial" id="wood"]
+shader = ExtResource("toon")
+shader_parameter/albedo = Color(0.4196, 0.2667, 0.1569, 1)
+
+[sub_resource type="BoxMesh" id="blade_m"]
+size = Vector3(0.06, 0.8, 0.015)
+
+[sub_resource type="BoxMesh" id="guard_m"]
+size = Vector3(0.2, 0.035, 0.06)
+
+[sub_resource type="CylinderMesh" id="grip_m"]
+top_radius = 0.025
+bottom_radius = 0.025
+height = 0.2
+radial_segments = 8
+
+[sub_resource type="SphereMesh" id="pommel_m"]
+radius = 0.035
+height = 0.07
+radial_segments = 8
+rings = 4
+
+[sub_resource type="BoxShape3D" id="hit_s"]
+size = Vector3(0.25, 0.9, 0.5)
+
+[node name="Sword" type="Node3D"]
+script = ExtResource("sword_gd")
+
+[node name="Grip" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("grip_m")
+material_override = SubResource("wood")
+
+[node name="Pommel" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11, 0)
+mesh = SubResource("pommel_m")
+material_override = SubResource("gold")
+
+[node name="Guard" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.115, 0)
+mesh = SubResource("guard_m")
+material_override = SubResource("gold")
+
+[node name="Blade" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.53, 0)
+mesh = SubResource("blade_m")
+material_override = SubResource("steel")
+
+[node name="Hitbox" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+collision_layer = 0
+collision_mask = 1
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox"]
+shape = SubResource("hit_s")
