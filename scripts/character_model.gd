@@ -72,6 +72,10 @@ enum Style { TOON_OUTLINE, TOON, PLAIN }
 ## After this many seconds into the swing, moving or jumping cancels the recovery and goes
 ## straight back to running. Set it above the clip length to always play the whole swing.
 @export var attack_cancel_time := 0.8
+## While moving, play the swing on the upper body only so the legs keep running (no sliding).
+@export var attack_blend_when_moving := true
+@export var overlay_fade_in := 0.08
+@export var overlay_fade_out := 0.2
 
 @export_group("Roll")
 ## Skips the falling part at the start of the roll clip. Raise until the roll starts as you want.
@@ -93,6 +97,11 @@ var _state := ""
 var _sword: Node3D
 var _sword_attachment: BoneAttachment3D
 var _swing_active := false
+var _overlay: AttackOverlay
+var _overlay_attack := false
+var _attack_time := 0.0
+var _attack_length := 1.0
+var _last_speed := 0.0
 
 
 func _ready() -> void:
@@ -107,6 +116,13 @@ func attack() -> bool:
 	if _anim == null or is_attacking or is_rolling or not _anim.has_animation(LIBRARY + "/attack"):
 		return false
 	is_attacking = true
+	_swing_active = false
+	if attack_blend_when_moving and _overlay != null and _last_speed > walk_threshold:
+		# Upper body only: the locomotion animation keeps playing underneath.
+		_overlay_attack = true
+		_attack_time = 0.0
+		return true
+	_overlay_attack = false
 	_state = "attack"
 	_anim.get_animation(LIBRARY + "/attack").loop_mode = Animation.LOOP_NONE
 	_anim.speed_scale = attack_speed_scale
@@ -137,24 +153,28 @@ func end_roll() -> void:
 
 
 ## speed is horizontal speed in m/s. run_speed is unused (kept so player.gd's call stays the same).
-func animate(_delta: float, speed: float, on_floor: bool, _vertical_speed: float, _run_speed: float) -> void:
+func animate(delta: float, speed: float, on_floor: bool, _vertical_speed: float, _run_speed: float) -> void:
 	_update_sword_grip()
+	_last_speed = speed
 	if _anim == null:
 		return
 	if is_rolling:
 		return
-	if is_attacking:
+	if is_attacking and _overlay_attack:
+		_attack_time += delta * attack_speed_scale
+		_overlay.time = minf(_attack_time, _attack_length)
+		_overlay.weight = clampf(minf(_attack_time / maxf(overlay_fade_in, 0.001),
+				(_attack_length - _attack_time) / maxf(overlay_fade_out, 0.001)), 0.0, 1.0)
+		_update_swing_window(_attack_time)
+		if _attack_time >= _attack_length:
+			_end_attack()
+		# no return: the locomotion code below keeps the legs moving
+	elif is_attacking:
 		var t := _anim.current_animation_position
 		if t >= attack_cancel_time and (speed > walk_threshold or not on_floor):
 			_end_attack()  # cancel the recovery, fall through to normal movement animations
 		else:
-			var active := t >= hit_start_time and t <= hit_end_time
-			if active != _swing_active:
-				_swing_active = active
-				if _sword and active:
-					_sword.begin_swing()
-				elif _sword:
-					_sword.end_swing()
+			_update_swing_window(t)
 			return
 	if not on_floor:
 		_play("jump", "jump", false, jump_speed_scale, jump_start_time)
@@ -258,6 +278,13 @@ func _setup_animations() -> void:
 		inst.free()
 
 	_anim.add_animation_library(LIBRARY, library)
+	if library.has_animation("attack"):
+		var attack_clip := library.get_animation("attack")
+		_attack_length = attack_clip.length
+		_overlay = AttackOverlay.new()
+		_overlay.name = "AttackOverlay"
+		skeleton.add_child(_overlay)
+		_overlay.setup(attack_clip)
 	_anim.animation_finished.connect(_on_animation_finished)
 	_play("idle", "idle")
 
@@ -298,11 +325,26 @@ func _on_animation_finished(anim_name: StringName) -> void:
 		end_roll()
 
 
+func _update_swing_window(t: float) -> void:
+	var active := t >= hit_start_time and t <= hit_end_time
+	if active == _swing_active:
+		return
+	_swing_active = active
+	if _sword and active:
+		_sword.begin_swing()
+	elif _sword:
+		_sword.end_swing()
+
+
 func _end_attack() -> void:
 	if not is_attacking:
 		return
 	is_attacking = false
-	_state = ""
+	if _overlay_attack:
+		_overlay.weight = 0.0  # locomotion kept playing, so don't restart it
+	else:
+		_state = ""
+	_overlay_attack = false
 	if _swing_active and _sword:
 		_sword.end_swing()
 	_swing_active = false
