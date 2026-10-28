@@ -28,7 +28,7 @@ enum Style { TOON_OUTLINE, TOON, PLAIN }
 ## Scale the run/walk animation with actual ground speed so the feet don't skate.
 @export var sync_animation_to_speed := true
 ## Ground speed (m/s) at which the run animation looks right at normal playback speed.
-@export var run_anim_speed := 7.0
+@export var run_anim_speed := 4.5
 
 @export_group("Lean")
 ## Constant forward tilt (degrees) at full speed.
