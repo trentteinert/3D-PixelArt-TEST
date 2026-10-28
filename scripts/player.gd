@@ -28,11 +28,10 @@ extends CharacterBody3D
 @export_group("Combat")
 ## Fraction of normal speed while swinging the sword.
 @export_range(0.0, 1.0) var attack_move_scale := 0.85
-## The roll starts at your current speed times this, so a standing roll is short and a sprint roll is long.
-@export var roll_speed_multiplier := 1.1
-## Roll speed is kept within this range (m/s). The minimum is what a roll from standing still uses.
-@export var roll_min_speed := 3.5
-@export var roll_max_speed := 7.0
+## How far (meters) a roll travels from standing still, and at full sprint. Between those it
+## scales with your speed when you start rolling.
+@export var roll_min_distance := 1.5
+@export var roll_max_distance := 3.0
 ## Once this fraction of the roll has played, moving or jumping hands control back.
 @export_range(0.0, 1.0) var roll_control_fraction := 0.55
 @export var roll_cooldown := 0.3
@@ -205,11 +204,15 @@ func _start_roll() -> void:
 	if dir.length() < 0.1:
 		dir = Vector3(-sin(model.rotation.y), 0.0, -cos(model.rotation.y))
 	_roll_dir = dir.normalized()
-	_roll_speed = clampf(_speed * roll_speed_multiplier, roll_min_speed, roll_max_speed)
 	model.rotation.y = atan2(-_roll_dir.x, -_roll_dir.z)
+	var start_speed := _speed
 	_roll_duration = model.roll()
 	if _roll_duration <= 0.0:
 		return
+	# Pick the speed that makes the whole roll cover the wanted distance (see _process_roll's curve).
+	var distance := lerpf(roll_min_distance, roll_max_distance, clampf(start_speed / sprint_speed, 0.0, 1.0))
+	var f := maxf(roll_control_fraction, 0.05)
+	_roll_speed = distance / (_roll_duration * (f * 0.7 + (1.0 - f) * 0.4))
 	_roll_time = _roll_duration
 	_roll_cooldown_left = roll_cooldown
 
@@ -223,8 +226,8 @@ func _process_roll(delta: float) -> bool:
 	if _roll_time <= 0.0 or (progress >= roll_control_fraction and wants_out):
 		model.end_roll()
 		return false
-	# Fast at the start, easing off as the roll finishes.
-	var s := _roll_speed * lerpf(1.0, 0.4, progress)
+	# Fast at the start, easing off until control returns, then a slow tail.
+	var s := _roll_speed * lerpf(1.0, 0.4, clampf(progress / maxf(roll_control_fraction, 0.05), 0.0, 1.0))
 	velocity.x = _roll_dir.x * s
 	velocity.z = _roll_dir.z * s
 	_speed = s

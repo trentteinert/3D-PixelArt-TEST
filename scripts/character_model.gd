@@ -74,6 +74,9 @@ enum Style { TOON_OUTLINE, TOON, PLAIN }
 @export var attack_cancel_time := 0.8
 ## While moving, play the swing on the upper body only so the legs keep running (no sliding).
 @export var attack_blend_when_moving := true
+## Only use the upper-body swing when moving faster than this (m/s). If you slow below 60% of it
+## mid-swing, the swing hands over to the full-body version (legs included) so it doesn't look odd.
+@export var overlay_min_speed := 3.0
 @export var overlay_fade_in := 0.08
 @export var overlay_fade_out := 0.2
 
@@ -99,6 +102,7 @@ var _sword_attachment: BoneAttachment3D
 var _swing_active := false
 var _overlay: AttackOverlay
 var _overlay_attack := false
+var _overlay_fading := false
 var _attack_time := 0.0
 var _attack_length := 1.0
 var _last_speed := 0.0
@@ -117,7 +121,7 @@ func attack() -> bool:
 		return false
 	is_attacking = true
 	_swing_active = false
-	if attack_blend_when_moving and _overlay != null and _last_speed > walk_threshold:
+	if attack_blend_when_moving and _overlay != null and _last_speed > overlay_min_speed:
 		# Upper body only: the locomotion animation keeps playing underneath.
 		_overlay_attack = true
 		_attack_time = 0.0
@@ -158,6 +162,12 @@ func animate(delta: float, speed: float, on_floor: bool, _vertical_speed: float,
 	_last_speed = speed
 	if _anim == null:
 		return
+	if _overlay_fading:
+		# Handing over to the full-body swing: the upper body stays on the overlay until the
+		# player's own attack clip has blended in underneath, then the overlay fades away.
+		_overlay.time = minf(_anim.current_animation_position, _attack_length)
+		_overlay.weight = maxf(_overlay.weight - delta / maxf(blend_time, 0.01), 0.0)
+		_overlay_fading = _overlay.weight > 0.0
 	if is_rolling:
 		return
 	if is_attacking and _overlay_attack:
@@ -168,6 +178,8 @@ func animate(delta: float, speed: float, on_floor: bool, _vertical_speed: float,
 		_update_swing_window(_attack_time)
 		if _attack_time >= _attack_length:
 			_end_attack()
+		elif speed < overlay_min_speed * 0.6 and on_floor:
+			_hand_over_to_full_body()
 		# no return: the locomotion code below keeps the legs moving
 	elif is_attacking:
 		var t := _anim.current_animation_position
@@ -325,6 +337,18 @@ func _on_animation_finished(anim_name: StringName) -> void:
 		end_roll()
 
 
+## Slowed to a near stop mid-swing: continue the same swing as the full-body clip, from the
+## same point, so the legs join in instead of the torso swinging over idle legs.
+func _hand_over_to_full_body() -> void:
+	_overlay_attack = false
+	_overlay_fading = true
+	_state = "attack"
+	_anim.get_animation(LIBRARY + "/attack").loop_mode = Animation.LOOP_NONE
+	_anim.speed_scale = attack_speed_scale
+	_anim.play(LIBRARY + "/attack", blend_time)
+	_anim.seek(_attack_time, true)
+
+
 func _update_swing_window(t: float) -> void:
 	var active := t >= hit_start_time and t <= hit_end_time
 	if active == _swing_active:
@@ -344,7 +368,10 @@ func _end_attack() -> void:
 		_overlay.weight = 0.0  # locomotion kept playing, so don't restart it
 	else:
 		_state = ""
+	if _overlay:
+		_overlay.weight = 0.0
 	_overlay_attack = false
+	_overlay_fading = false
 	if _swing_active and _sword:
 		_sword.end_swing()
 	_swing_active = false
