@@ -19,6 +19,12 @@ extends CharacterBody3D
 ## Deceleration (m/s²) while braking into a reversal.
 @export var reverse_brake := 70.0
 
+@export_group("Stairs and Slopes")
+## Tallest ledge the character walks up without jumping.
+@export var step_height := 0.45
+## How far below the feet the floor is still "stuck to", so running down stairs and slopes doesn't bounce.
+@export var floor_snap := 0.4
+
 @export_group("Jump")
 @export var jump_velocity := 7.5
 @export var gravity_scale := 2.0
@@ -52,6 +58,7 @@ var _base_fov := 70.0
 
 func _ready() -> void:
 	_setup_input()
+	floor_snap_length = floor_snap
 	spring_arm.add_excluded_object(get_rid())
 	_pitch = spring_arm.rotation.x
 	# Detach the pivot so it can trail the player smoothly (rotation is set by mouse look only).
@@ -146,7 +153,11 @@ func _physics_process(delta: float) -> void:
 	var local_accel := Basis(Vector3.UP, model.rotation.y).inverse() * Vector3(accel.x, 0.0, accel.y)
 	model.lean(delta, local_accel, _speed / sprint_speed)
 
+	_try_step_up()
 	move_and_slide()
+
+	# Ease out the pop from stepping up so the model glides up stairs instead of snapping.
+	model.position.y = lerpf(model.position.y, 0.0, 1.0 - exp(-14.0 * delta))
 
 	# Face the direction we're actually travelling (not just the input), so the body never
 	# points one way while the ground slides past in another, which reads as foot skating.
@@ -155,6 +166,35 @@ func _physics_process(delta: float) -> void:
 		model.rotation.y = lerp_angle(model.rotation.y, yaw, 1.0 - exp(-turn_speed * delta))
 
 	model.animate(delta, horizontal.length(), is_on_floor(), velocity.y, sprint_speed)
+
+
+## Walks up ledges lower than step_height: if we'd hit a wall-like surface, check there is
+## headroom, that the way forward is clear one step higher, and that there is floor to land on.
+func _try_step_up() -> void:
+	if not is_on_floor() or velocity.y > 0.1:
+		return
+	var motion := Vector3(velocity.x, 0.0, velocity.z) * get_physics_process_delta_time()
+	if motion.length() < 0.001:
+		return
+	# Probe a little further than this frame's motion so the riser is caught early.
+	var probe := motion.normalized() * maxf(motion.length(), 0.1)
+	var blocked := KinematicCollision3D.new()
+	if not test_move(global_transform, probe, blocked) or blocked.get_normal().y > 0.7:
+		return  # nothing in the way, or a walkable slope (move_and_slide handles those)
+	var up := Vector3.UP * step_height
+	if test_move(global_transform, up):
+		return  # no headroom
+	var raised := global_transform.translated(up)
+	if test_move(raised, probe):
+		return  # still blocked one step higher: a wall, not a step
+	var landing := KinematicCollision3D.new()
+	if not test_move(raised.translated(probe), -up, landing) or landing.get_normal().y < 0.7:
+		return  # nothing walkable to land on
+	var rise := step_height - landing.get_travel().length()
+	if rise <= 0.01:
+		return
+	global_position.y += rise
+	model.position.y -= rise
 
 
 func _look(yaw_delta: float, pitch_delta: float) -> void:
