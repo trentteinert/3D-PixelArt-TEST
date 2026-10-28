@@ -5,10 +5,14 @@ extends CharacterBody3D
 @export_group("Movement")
 @export var walk_speed := 5.0
 @export var sprint_speed := 9.0
-@export var acceleration := 22.0
+@export var acceleration := 35.0
 @export var air_acceleration := 15.0
-@export var friction := 28.0
-@export var turn_speed := 10.0
+@export var friction := 40.0
+## How fast the body turns to face the direction of travel.
+@export var turn_speed := 16.0
+## How fast (radians/second) your direction of travel swings toward the input on the ground.
+## Higher = snappier direction changes with no speed loss; lower = wider, more weighty turns.
+@export var turn_rate := 12.0
 
 @export_group("Jump")
 @export var jump_velocity := 7.5
@@ -105,8 +109,20 @@ func _physics_process(delta: float) -> void:
 	var horizontal := Vector2(velocity.x, velocity.z)
 	var previous_horizontal := horizontal
 	var target := Vector2(dir.x, dir.z) * top_speed
-	var rate := friction if input == Vector2.ZERO else (acceleration if is_on_floor() else air_acceleration)
-	horizontal = horizontal.move_toward(target, rate * delta)
+	if is_on_floor() and input != Vector2.ZERO:
+		# Steer the heading toward the input and keep the speed, so direction changes are
+		# sharp but momentum isn't lost in the turn. Speed ramps toward the target separately.
+		var target_dir := target.normalized()
+		var current_speed := horizontal.length()
+		var heading := target_dir
+		if current_speed > 0.1:
+			heading = horizontal / current_speed
+			var angle := heading.angle_to(target_dir)
+			heading = heading.rotated(clampf(angle, -turn_rate * delta, turn_rate * delta))
+		horizontal = heading * move_toward(current_speed, target.length(), acceleration * delta)
+	else:
+		var rate := friction if input == Vector2.ZERO else air_acceleration
+		horizontal = horizontal.move_toward(target, rate * delta)
 	velocity.x = horizontal.x
 	velocity.z = horizontal.y
 	_speed = horizontal.length()
