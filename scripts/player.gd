@@ -5,10 +5,10 @@ extends CharacterBody3D
 @export_group("Movement")
 @export var walk_speed := 5.0
 @export var sprint_speed := 9.0
-@export var acceleration := 40.0
+@export var acceleration := 22.0
 @export var air_acceleration := 15.0
-@export var friction := 50.0
-@export var turn_speed := 12.0
+@export var friction := 28.0
+@export var turn_speed := 10.0
 
 @export_group("Jump")
 @export var jump_velocity := 7.5
@@ -21,22 +21,35 @@ extends CharacterBody3D
 @export var stick_sensitivity := 2.5
 @export var min_pitch := -1.3
 @export var max_pitch := 0.4
+## How quickly the camera catches up to the player (higher = tighter, 0 = rigidly attached).
+@export var camera_follow_speed := 14.0
+## Extra field of view (degrees) added at full sprint.
+@export var sprint_fov_boost := 8.0
 
 @onready var model: CharacterModel = $Model
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var spring_arm: SpringArm3D = $CameraPivot/SpringArm3D
+@onready var camera: Camera3D = $CameraPivot/SpringArm3D/Camera3D
 @onready var edge_highlight: MeshInstance3D = $CameraPivot/SpringArm3D/Camera3D/EdgeHighlight
 
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _coyote := 0.0
 var _jump_buffer := 0.0
 var _pitch := -0.5
+var _speed := 0.0
+var _camera_offset := Vector3.ZERO
+var _base_fov := 70.0
 
 
 func _ready() -> void:
 	_setup_input()
 	spring_arm.add_excluded_object(get_rid())
 	_pitch = spring_arm.rotation.x
+	# Detach the pivot so it can trail the player smoothly (rotation is set by mouse look only).
+	_camera_offset = camera_pivot.position
+	_base_fov = camera.fov
+	camera_pivot.top_level = true
+	camera_pivot.global_position = global_position + _camera_offset
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
@@ -54,6 +67,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+	var target := global_position + _camera_offset
+	if camera_follow_speed > 0.0:
+		camera_pivot.global_position = camera_pivot.global_position.lerp(target, 1.0 - exp(-camera_follow_speed * delta))
+	else:
+		camera_pivot.global_position = target
+	var sprint_t := clampf((_speed - walk_speed) / maxf(sprint_speed - walk_speed, 0.01), 0.0, 1.0)
+	camera.fov = lerpf(camera.fov, _base_fov + sprint_fov_boost * sprint_t, 1.0 - exp(-6.0 * delta))
+
 	var stick := Input.get_vector("look_left", "look_right", "look_up", "look_down")
 	if stick != Vector2.ZERO:
 		_look(-stick.x * stick_sensitivity * delta, -stick.y * stick_sensitivity * delta)
@@ -82,11 +103,18 @@ func _physics_process(delta: float) -> void:
 
 	var top_speed := sprint_speed if Input.is_action_pressed("sprint") else walk_speed
 	var horizontal := Vector2(velocity.x, velocity.z)
+	var previous_horizontal := horizontal
 	var target := Vector2(dir.x, dir.z) * top_speed
 	var rate := friction if input == Vector2.ZERO else (acceleration if is_on_floor() else air_acceleration)
 	horizontal = horizontal.move_toward(target, rate * delta)
 	velocity.x = horizontal.x
 	velocity.z = horizontal.y
+	_speed = horizontal.length()
+
+	# Acceleration in the character's own frame (x = right, z = back) drives the body lean.
+	var accel := (horizontal - previous_horizontal) / delta
+	var local_accel := Basis(Vector3.UP, model.rotation.y).inverse() * Vector3(accel.x, 0.0, accel.y)
+	model.lean(delta, local_accel, _speed / sprint_speed)
 
 	move_and_slide()
 

@@ -25,6 +25,21 @@ enum Style { TOON_OUTLINE, TOON, PLAIN }
 @export var blend_time := 0.2
 ## Walking reuses the run animation at this playback speed (1.0 = same as running).
 @export_range(0.1, 1.5) var walk_speed_scale := 0.55
+## Scale the run/walk animation with actual ground speed so the feet don't skate.
+@export var sync_animation_to_speed := true
+## Ground speed (m/s) at which the run animation looks right at normal playback speed.
+@export var run_anim_speed := 7.0
+
+@export_group("Lean")
+## Constant forward tilt (degrees) at full speed.
+@export var speed_lean_degrees := 8.0
+## Extra tilt (degrees) per m/s² of acceleration: leans forward when speeding up, back when braking.
+@export var accel_lean_degrees := 0.6
+## Sideways banking (degrees) per m/s² of sideways acceleration, i.e. into turns.
+@export var turn_lean_degrees := 0.7
+@export var max_lean_degrees := 18.0
+## How quickly the lean follows (higher = snappier).
+@export var lean_smoothing := 10.0
 
 @export_group("Jump Timing")
 ## Where in the jump animation (seconds) to start when you leave the ground. Skip the crouch by raising this.
@@ -62,10 +77,29 @@ func animate(_delta: float, speed: float, on_floor: bool, _vertical_speed: float
 			_anim.pause()
 	elif speed > run_threshold:
 		_play("run", "run")
+		_sync_speed(speed, 1.0)
 	elif speed > walk_threshold:
 		_play("walk", "run", true, walk_speed_scale)
+		_sync_speed(speed, walk_speed_scale)
 	else:
 		_play("idle", "idle")
+
+
+func _sync_speed(speed: float, fallback: float) -> void:
+	_anim.speed_scale = clampf(speed / run_anim_speed, 0.4, 2.0) if sync_animation_to_speed else fallback
+
+
+## Tilts the whole model. local_accel is horizontal acceleration in the model's own frame
+## (x = right, z = back); speed_fraction is 0..1 of top speed.
+func lean(delta: float, local_accel: Vector3, speed_fraction: float) -> void:
+	var limit := deg_to_rad(max_lean_degrees)
+	# Negative pitch tips the head toward -Z (forward).
+	var pitch := deg_to_rad(-speed_lean_degrees * speed_fraction + accel_lean_degrees * local_accel.z)
+	# Negative roll tips the head toward +X (right).
+	var roll := deg_to_rad(-turn_lean_degrees * local_accel.x)
+	var t := 1.0 - exp(-lean_smoothing * delta)
+	rotation.x = lerpf(rotation.x, clampf(pitch, -limit, limit), t)
+	rotation.z = lerpf(rotation.z, clampf(roll, -limit, limit), t)
 
 
 func cycle_style() -> void:
@@ -84,7 +118,8 @@ func _play(state: String, anim_name: String, loop := true, speed := 1.0, start_t
 	var full := "%s/%s" % [LIBRARY, anim_name]
 	if _anim.has_animation(full):
 		_anim.get_animation(full).loop_mode = Animation.LOOP_LINEAR if loop else Animation.LOOP_NONE
-		_anim.play(full, blend_time, speed)
+		_anim.speed_scale = speed
+		_anim.play(full, blend_time)
 		if start_time > 0.0:
 			_anim.seek(start_time, true)
 
