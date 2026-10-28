@@ -145,8 +145,10 @@ func animate(_delta: float, speed: float, on_floor: bool, _vertical_speed: float
 		var active := t >= hit_start_time and t <= hit_end_time
 		if active != _swing_active:
 			_swing_active = active
-			if _sword:
-				_sword.begin_swing() if active else _sword.end_swing()
+			if _sword and active:
+				_sword.begin_swing()
+			elif _sword:
+				_sword.end_swing()
 		return
 	if not on_floor:
 		_play("jump", "jump", false, jump_speed_scale, jump_start_time)
