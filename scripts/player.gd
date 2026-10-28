@@ -12,7 +12,12 @@ extends CharacterBody3D
 @export var turn_speed := 16.0
 ## How fast (radians/second) your direction of travel swings toward the input on the ground.
 ## Higher = snappier direction changes with no speed loss; lower = wider, more weighty turns.
-@export var turn_rate := 12.0
+@export var turn_rate := 20.0
+## Turning more than this many degrees away from your current direction counts as a reversal:
+## the character brakes hard and pivots instead of swinging around in an arc.
+@export var reverse_angle_degrees := 110.0
+## Deceleration (m/s²) while braking into a reversal.
+@export var reverse_brake := 70.0
 
 @export_group("Jump")
 @export var jump_velocity := 7.5
@@ -118,8 +123,17 @@ func _physics_process(delta: float) -> void:
 		if current_speed > 0.1:
 			heading = horizontal / current_speed
 			var angle := heading.angle_to(target_dir)
-			heading = heading.rotated(clampf(angle, -turn_rate * delta, turn_rate * delta))
-		horizontal = heading * move_toward(current_speed, target.length(), acceleration * delta)
+			if absf(angle) > deg_to_rad(reverse_angle_degrees):
+				if current_speed > 1.5:
+					# Reversal: brake to a near stop first, then take off the new way.
+					horizontal = horizontal.move_toward(Vector2.ZERO, reverse_brake * delta)
+					heading = Vector2.ZERO
+				else:
+					heading = target_dir
+			else:
+				heading = heading.rotated(clampf(angle, -turn_rate * delta, turn_rate * delta))
+		if heading != Vector2.ZERO:
+			horizontal = heading * move_toward(current_speed, target.length(), acceleration * delta)
 	else:
 		var rate := friction if input == Vector2.ZERO else air_acceleration
 		horizontal = horizontal.move_toward(target, rate * delta)
