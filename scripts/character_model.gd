@@ -180,6 +180,7 @@ func animate(delta: float, speed: float, on_floor: bool, _vertical_speed: float,
 			_end_attack()
 		elif speed < overlay_min_speed * 0.6 and on_floor:
 			_hand_over_to_full_body()
+			return  # don't let the locomotion code below start idle/walk over the swing
 		# no return: the locomotion code below keeps the legs moving
 	elif is_attacking:
 		var t := _anim.current_animation_position
