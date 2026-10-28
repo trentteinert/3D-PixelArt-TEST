@@ -118,9 +118,10 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-	# Face movement direction
-	if dir.length() > 0.1:
-		var yaw := atan2(-dir.x, -dir.z)
+	# Face the direction we're actually travelling (not just the input), so the body never
+	# points one way while the ground slides past in another, which reads as foot skating.
+	if horizontal.length() > 0.5:
+		var yaw := atan2(-horizontal.x, -horizontal.y)
 		model.rotation.y = lerp_angle(model.rotation.y, yaw, 1.0 - exp(-turn_speed * delta))
 
 	model.animate(delta, horizontal.length(), is_on_floor(), velocity.y, sprint_speed)
